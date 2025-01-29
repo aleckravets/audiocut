@@ -1,7 +1,9 @@
-.canvasContainer {
+.container {
     position: relative;
-    height: 40vh;
+    height: 200px;
     width: 100%;
+    border: 1px solid #bbb;
+    background: linear-gradient(135deg, rgb(95, 107, 155) 0%, rgb(18, 19, 27) 100%) no-repeat;
 
     canvas {
         width: 100%;

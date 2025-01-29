@@ -1,15 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
+import { drawWaveform } from './drawWaveform';
 
 interface WaveformProps {
   src: string;
 }
 
 const Waveform = ({ src }: WaveformProps) => {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
 
   useEffect(() => {
-    const fetchAndDraw = async () => {
+    const fetchAndDecode = async () => {
       if (src) {
         console.log('fetching...');
         const response = await fetch(src);
@@ -18,63 +21,43 @@ const Waveform = ({ src }: WaveformProps) => {
         const arrayBuffer = await response.arrayBuffer();
         const audioContext = new AudioContext();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        
-        console.log('drawing...');
-        drawWaveform(ref.current!.querySelector("canvas")!, audioBuffer);
+        setAudioBuffer(audioBuffer);
       }
     };
 
-    fetchAndDraw();
+    fetchAndDecode();
   }, [src]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+
+    if (audioBuffer && container && canvas) {
+      const observer = new ResizeObserver(() => {
+        // Adjust for high-DPI screens (e.g., Retina displays)
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = container.clientWidth;// * dpr;
+        canvas.height = container.clientHeight;// * dpr;
+
+        // canvas.getContext('2d')!.scale(dpr, dpr);
+
+        console.log('drawing...');
+
+        drawWaveform(canvas, audioBuffer)
+      });
+  
+      observer.observe(containerRef.current!);
+  
+      return () => observer.disconnect();
+    }
+  }, [audioBuffer]);
+
   return (
-    <div ref={ref} className={style.canvasContainer}>
-      <canvas />
+    <div ref={containerRef} className={style.container}>
+      <canvas ref={canvasRef} />
     </div>
   );
 };
 
 export default Waveform;
-
-function drawWaveform(canvas: HTMLCanvasElement, audioBuffer: AudioBuffer) {
-  const canvasContext = canvas.getContext('2d')!;
-
-  const rawData = audioBuffer.getChannelData(0); // Get audio data from the first channel
-  const sampleRate = Math.floor(rawData.length / canvas.width); // Calculate sampling rate
-  const samples = [];
-  for (let i = 0; i < rawData.length; i += sampleRate) {
-    const slice = rawData.slice(i, i + sampleRate);
-    const max = Math.max(...slice); // Get the maximum amplitude in the slice
-    const min = Math.min(...slice); // Get the minimum amplitude in the slice
-    samples.push({ max, min });
-  }
-
-  // Clear canvas
-  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw waveform
-  const middle = canvas.height / 2;
-  canvasContext.fillStyle = '#1DB954'; // Greenish color for waveform
-  canvasContext.beginPath();
-
-  // Draw top part of waveform
-  for (let i = 0; i < samples.length; i++) {
-    const x = i;
-    const y = middle - samples[i].max * middle; // Scale amplitude to fit canvas height
-    if (i === 0) {
-      canvasContext.moveTo(x, y);
-    } else {
-      canvasContext.lineTo(x, y);
-    }
-  }
-
-  // Draw bottom part of waveform
-  // for (let i = samples.length - 1; i >= 0; i--) {
-  //   const x = i;
-  //   const y = middle - samples[i].min * middle; // Scale amplitude to fit canvas height
-  //   canvasContext.lineTo(x, y);
-  // }
-
-  canvasContext.closePath();
-  canvasContext.fill();
-}
