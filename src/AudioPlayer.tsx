@@ -12,7 +12,8 @@ interface AudioPlayerProps {
 const AudioPlayer = ({ src }: AudioPlayerProps) => {
   const [audio, setAudio] = useState<HTMLAudioElement>();
   // todo save to local storage
-  const [volume, setVolume] = useState(1);
+  const [currentVolume, setCurrentVolume] = useState(1);
+  const [savedVolume, setSavedVolume] = useState(currentVolume);
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,7 +24,7 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
 
   useEffect(() => {
     const audio = new Audio(src);
-    audio.volume = volume;
+    audio.volume = currentVolume;
     setAudio(audio);
 
     audio.addEventListener('timeupdate', () => {
@@ -41,7 +42,6 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
     }
   }, [src]);
 
-
   const seek = (value: number) => audio && (audio.currentTime = value);
 
   useEffect(() => {
@@ -54,6 +54,12 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
       }
     }
   }, [currentTime]);
+
+  useEffect(() => {
+    if (audio) {
+      audio.volume = currentVolume;
+    }
+  }, [currentVolume]);
 
   const togglePlay = () => {
     if (audio) {
@@ -98,13 +104,20 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
     }
   }
 
-  const changeVolume = (value: number) => {
-    setVolume(value);
-
-    if (audio) {
-      audio.volume = value;
+  const handleVolumeChangeComplete = (value: number) => {
+    if (value > 0) {
+      setSavedVolume(value);
     }
-  };
+  }
+
+  const toggleMuted = () => {
+    if (currentVolume === 0) {
+      setCurrentVolume(savedVolume);
+    }
+    else {
+      setCurrentVolume(0);
+    }
+  }
 
   return (
     <div>
@@ -125,11 +138,13 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
           <Slider
             min={0}
             max={1}
-            defaultValue={1}
+            value={currentVolume}
             step={0.01}
-            onChange={value => changeVolume(value as number)}
+            onChange={value => setCurrentVolume(value as number)}
+            onChangeComplete={value => handleVolumeChangeComplete(value as number)}
           />
         </label>
+        <button onClick={toggleMuted}>{currentVolume === 0 ? 'Unmute' : 'Mute'}</button>
       </div>
       {audio && !duration && <p>Loading audio...</p>}
       {duration &&
