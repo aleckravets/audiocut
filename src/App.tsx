@@ -2,11 +2,10 @@ import './App.css'
 import AudioPlayer from './AudioPlayer'
 import FilePicker from './FilePicker'
 import { useEffect, useState } from 'react';
-import Waveform from './Waveform';
 
 function App() {
   const [file, setFile] = useState<File>();
-  const [url, setUrl] = useState<string>();
+  const [url, setUrl] = useState<string>('./al-di-meola.mp3');
 
   useEffect(() => {
     if (file) {
@@ -22,7 +21,6 @@ function App() {
       {url &&
         <>
           <AudioPlayer src={url} />
-          <Waveform src={url} />
         </>
       }
     </div>
