@@ -32,7 +32,7 @@
 
     :global(.rc-slider-handle) {
         cursor: ew-resize;
-        border: 0;
+        border: none;
         width: 10px;
         background-color: transparent;
         height: 100px;
@@ -42,11 +42,10 @@
     
     :global(.rc-slider-handle)::after {
         content: '';
-        position: absolute;
-        top: 0;
-        left: 4;
         width: 2px;
         height: 100%;
         background-color: orange;
+        margin: 0 auto;
+        display: block;
     }
 }
