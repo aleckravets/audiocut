@@ -133,6 +133,7 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
           Loop
         </label>
         {audio && <p>Current time: {formatTime(currentTime)}</p>}
+        <button onClick={toggleMuted}>{currentVolume === 0 ? 'Unmute' : 'Mute'}</button>
         <label>
           Volume:
           <Slider
@@ -142,30 +143,29 @@ const AudioPlayer = ({ src }: AudioPlayerProps) => {
             step={0.01}
             onChange={value => setCurrentVolume(value as number)}
             onChangeComplete={value => handleVolumeChangeComplete(value as number)}
+            className={style.volumeSlider}
           />
         </label>
-        <button onClick={toggleMuted}>{currentVolume === 0 ? 'Unmute' : 'Mute'}</button>
       </div>
       {audio && !duration && <p>Loading audio...</p>}
       {duration &&
-        <>
+        <div className={style.trackContainer}>
+          <Slider
+            range
+            min={0}
+            max={duration}
+            defaultValue={[startPosition, endPosition]}
+            onChange={values => changeRange(values as number[])}
+            onChangeComplete={applyRange}
+            step={0.1}
+            className={style.rangeSlider}
+          />
           <Waveform src={src} />
-          <div>
-            <Slider
-              range
-              min={0}
-              max={duration}
-              defaultValue={[startPosition, endPosition]}
-              onChange={values => changeRange(values as number[])}
-              onChangeComplete={applyRange}
-              step={0.1}
-              className={style.rangeSlider}
-            />
-            <p>
-              {formatTimeRange(startPosition, endPosition)}
-            </p>
-          </div>
-        </>
+
+          <p>
+            {formatTimeRange(startPosition, endPosition)}
+          </p>
+        </div>
       }
     </div>
   );

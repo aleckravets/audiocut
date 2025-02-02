@@ -11,6 +11,17 @@ const Waveform = ({ src }: WaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
 
+  // prevent dragging cursor on canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (canvas) {
+      canvas.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+    }
+  }, [])
+
   useEffect(() => {
     const fetchAndDecode = async () => {
       if (src) {
@@ -46,9 +57,9 @@ const Waveform = ({ src }: WaveformProps) => {
 
         drawWaveform(canvas, audioBuffer)
       });
-  
+
       observer.observe(containerRef.current!);
-  
+
       return () => observer.disconnect();
     }
   }, [audioBuffer]);

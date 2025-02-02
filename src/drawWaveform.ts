@@ -1,4 +1,4 @@
-const lineOffset = 0.7;
+const lineOffset = 0.5;
 
 export function drawWaveform(
   canvas: HTMLCanvasElement,
