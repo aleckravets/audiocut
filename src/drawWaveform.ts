@@ -60,4 +60,4 @@ function canvasLinearGradient(canvasCtx: any, colorStops: any) {
   }, canvasCtx.createLinearGradient(0, 0, 0, l))
 }
 
-const waveGradient = [[0, "255,255,255"], [0.7, "255,255,255"], [0.701, "229,229,229"], [1, "229,229,229"]];
+const waveGradient = [[0, "255,255,255"], [lineOffset, "255,255,255"], [lineOffset, "229,229,229"], [1, "229,229,229"]];
