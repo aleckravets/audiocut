@@ -1,24 +1,19 @@
-import { useDropzone } from 'react-dropzone';
-import style from './FilePicker.module.css';
-
 interface FilePickerProps {
-  onChange: (file: File) => void;
+  onSelect: (file: File) => void
 }
 
-const FilePicker = ({ onChange }: FilePickerProps) => {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      onChange(acceptedFiles[0]);
-    },
-    multiple: false,
-  });
+const FilePicker = ({ onSelect: onFileSelect }: FilePickerProps) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    onFileSelect(file)
+  }
 
   return (
-    <div {...getRootProps()} className={isDragActive ? style.dragActive : ''}>
-      <input {...getInputProps()} />
-      <p>Drag 'n' drop a file here, or click to select a file</p>
+    <div className="file-picker">
+      <input type="file" accept="audio/*" onChange={handleFileSelect} />
     </div>
-  );
-};
+  )
+}
 
-export default FilePicker;
+export default FilePicker 

@@ -3,41 +3,31 @@ import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 
 interface WaveformProps {
-  src: string;
+  fileUrl: string;
 }
 
-const Waveform = ({ src }: WaveformProps) => {
+const Waveform = ({ fileUrl }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
 
-  // prevent dragging cursor on canvas
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const loadAudio = async () => {
+      if (!fileUrl) return;
 
-    if (canvas) {
-      canvas.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-      });
-    }
-  }, [])
-
-  useEffect(() => {
-    const fetchAndDecode = async () => {
-      if (src) {
-        console.log('fetching...');
-        const response = await fetch(src);
-
-        console.log('decoding...');
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(fileUrl);
         const arrayBuffer = await response.arrayBuffer();
-        const audioContext = new AudioContext();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         setAudioBuffer(audioBuffer);
+      } catch (error) {
+        console.error('Error loading audio:', error);
       }
     };
 
-    fetchAndDecode();
-  }, [src]);
+    loadAudio();
+  }, [fileUrl]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -50,10 +40,6 @@ const Waveform = ({ src }: WaveformProps) => {
 
         canvas.width = container.clientWidth;// * dpr;
         canvas.height = container.clientHeight;// * dpr;
-
-        // canvas.getContext('2d')!.scale(dpr, dpr);
-
-        console.log('drawing...');
 
         drawWaveform(canvas, audioBuffer)
       });
