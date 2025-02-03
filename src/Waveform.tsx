@@ -238,7 +238,12 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
   useEffect(() => {
     document.addEventListener('mouseup', handleEnd);
-    return () => document.removeEventListener('mouseup', handleEnd);
+    document.addEventListener('touchend', handleEnd);
+
+    return () => {
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchend', handleEnd);
+    }
   }, [handleEnd]);
 
   useEffect(() => {
