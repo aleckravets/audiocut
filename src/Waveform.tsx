@@ -182,7 +182,6 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
     if (start > end) {
       [start, end] = [end, start];
-
       setResizeHandle(resizeHandle === 'start' ? 'end' : 'start')
     }
 
@@ -238,9 +237,12 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
   }, [range, draftRange]);
 
   useEffect(() => {
-    if (!containerRef.current) return
+    document.addEventListener('mouseup', handleEnd);
+    return () => document.removeEventListener('mouseup', handleEnd);
+  }, [handleEnd]);
 
-    const container = containerRef.current
+  useEffect(() => {
+    const container = containerRef.current!;
 
     const preventDefaultTouch = (e: TouchEvent) => {
       e.preventDefault()
@@ -256,7 +258,9 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
       container.removeEventListener('touchmove', preventDefaultTouch)
       container.removeEventListener('touchend', preventDefaultTouch)
     }
-  }, [])
+  }, []);
+
+  // console.log(draftRange);
 
   return (
     <div ref={containerRef} className={style.container}>
@@ -266,13 +270,12 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
         onMouseDown={handleStart}
         onTouchStart={handleStart}
         onMouseMove={(e) => {
-          handleMove(e)
-          updateCursor(e)
+          handleMove(e);
+          updateCursor(e);
         }}
         onTouchMove={handleMove}
         onMouseUp={handleEnd}
         onTouchEnd={handleEnd}
-        onMouseLeave={handleEnd}
       />
     </div>
   );
