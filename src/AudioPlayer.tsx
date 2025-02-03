@@ -3,11 +3,7 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Waveform from './Waveform';
 import style from './AudioPlayer.module.scss';
-
-interface Range {
-  start: number;
-  end: number;
-}
+import { Range } from './Waveform';
 
 interface AudioPlayerProps {
   fileUrl: string;
@@ -26,7 +22,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   useEffect(() => {
     if (fileUrl) {
       const audio = new Audio(fileUrl);
-      
+
       audio.volume = volume;
 
       audio.addEventListener('timeupdate', () => {
@@ -137,7 +133,10 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
         </label>
       </div>
       <div className={style.trackContainer}>
-        <Waveform fileUrl={fileUrl} />
+        <Waveform
+          fileUrl={fileUrl}
+          onSelectionChange={handleSelectionChange}
+        />
         <p>
           {selection && formatTimeRange(selection.start, selection.end)}
         </p>
