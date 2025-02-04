@@ -12,10 +12,10 @@ interface AudioPlayerProps {
 
 // duration and positions are in seconds (float)
 const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
-  const {currentTime, volume, playing, duration, setVolume, togglePlay, stop, seek} = useAudio(fileUrl);
-  const [savedVolume, setSavedVolume] = useState(volume);
   const [loop, setLoop] = useState(true);
-  const [range, setRange] = useState<Range | null>();
+  const [range, setRange] = useState<Range | null>(null);
+  const { currentTime, volume, playing, duration, setVolume, play, togglePlay, stop, seek } = useAudio(fileUrl, { loop });
+  const [savedVolume, setSavedVolume] = useState(volume);
 
   const handleRangeChange = (newRange: Range | null) => {
     setRange(newRange);
@@ -26,6 +26,22 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
       }
     }
   }
+
+  useEffect(() => {
+    if (range !== null && currentTime !== null) {
+      if (currentTime >= range.end) {
+        if (loop) {
+          seek(range.start);
+        }
+        else {
+          stop();
+        }
+      }
+      if (currentTime < range.start) {
+        seek(range.start);
+      }
+    }
+  }, [currentTime, range, loop]);
 
   const toggleLoop = () => {
     setLoop(!loop);
@@ -82,6 +98,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
         />
         <p>
           {range && formatTimeRange(range.start, range.end)}
+          <div>{currentTime} / {duration}</div>
         </p>
       </div>
     </div>

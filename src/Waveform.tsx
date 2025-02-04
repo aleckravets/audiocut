@@ -152,7 +152,6 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     const offset = getOffset(e as any);
 
     setIgnoreMinWidth(false);
-    
     // Check for resize handles first
     const handle = findResizeHandle(offset.x);
 

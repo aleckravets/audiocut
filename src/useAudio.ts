@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
-export function useAudio(fileUrl: string) {
+interface Options {
+    loop?: boolean;
+}
+
+export function useAudio(fileUrl: string, options?: Options) {
+    const {loop} = options || {};
     const [audio, setAudio] = useState<HTMLAudioElement | null>();
     const [currentTime, setCurrentTime] = useState<number | null>(null);
     const [duration, setDuration] = useState<number | null>(null);
@@ -12,6 +17,7 @@ export function useAudio(fileUrl: string) {
             const audio = new Audio(fileUrl);
 
             audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
+            audio.addEventListener('ended', () => setCurrentTime(audio.duration));
 
             audio.addEventListener('loadedmetadata', () => {
                 setDuration(audio.duration);
@@ -37,6 +43,12 @@ export function useAudio(fileUrl: string) {
         setPlaying(false);
     }, [fileUrl]);
 
+    useEffect(() => {
+        if (audio && loop !== undefined) {
+            audio.loop = loop;
+        }
+    }, [audio, loop]);
+
     const togglePlay = () => {
         if (audio) {
             if (audio.paused) {
@@ -46,6 +58,12 @@ export function useAudio(fileUrl: string) {
             }
         }
     };
+
+    const play = () => {
+        if (audio) {
+            audio.play();
+        }
+    }
 
     const stop = () => {
         if (audio) {
@@ -72,6 +90,7 @@ export function useAudio(fileUrl: string) {
         currentTime,
         playing,
         volume,
+        play,
         togglePlay,
         stop,
         seek,
