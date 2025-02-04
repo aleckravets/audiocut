@@ -100,7 +100,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
       ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
       ctx.fillRect(startPx, 0, endPx - startPx, canvas.height);
-      
+
       setIgnoreMinWidth(true);
     }
   }
@@ -123,7 +123,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     return null;
   }
 
-  const getOffset = (e: MouseEvent | TouchEvent): {x: number, ratio: number} => {
+  const getOffset = (e: MouseEvent | TouchEvent): { x: number, ratio: number } => {
     let clientX: number;
 
     if ('touches' in e) {
@@ -137,7 +137,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       clientX = e.clientX;
     }
 
-    const {left, right} = canvasRef.current!.getBoundingClientRect();
+    const { left, right } = canvasRef.current!.getBoundingClientRect();
 
     const x = clientX < left ? 0 : (clientX > right ? right - left : clientX - left);
     const ratio = offsetToRatio(x);
@@ -167,7 +167,9 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     }
 
     // prevent selection when mouse goes outside of canvas while selecting a range
-    e.preventDefault();
+    if (!('touches' in e)) {
+      e.preventDefault();
+    }
   }
 
   const handleMove = (e: MouseEvent | TouchEvent) => {
@@ -219,11 +221,11 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
         canvas.style.cursor = 'ew-resize';
       }
       else {
-        canvas.style.cursor = 'pointer';
+        canvas.style.cursor = 'text';
       }
     }
     else {
-        canvas.style.cursor = handle ? 'ew-resize' : 'default';
+      canvas.style.cursor = handle ? 'ew-resize' : 'text';
     }
   }
 
@@ -240,7 +242,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     document.addEventListener('mousemove', updateCursor);
 
     document.addEventListener('touchmove', handleMove);
-    
+
     document.addEventListener('mouseup', handleEnd);
     document.addEventListener('touchend', handleEnd);
 

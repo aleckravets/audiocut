@@ -96,10 +96,8 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
           max={duration}
           onRangeChange={handleRangeChange}
         />
-        <p>
-          {range && formatTimeRange(range.start, range.end)}
-          <div>{currentTime} / {duration}</div>
-        </p>
+        <p>{range && formatTimeRange(range.start, range.end)}</p>
+        <p>{currentTime} / {duration}</p>
       </div>
     </div>
   );
