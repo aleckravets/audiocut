@@ -18,15 +18,6 @@ type ResizeHandle = 'start' | 'end';
 const RESIZE_HANDLE_WIDTH = 10; // in pixels
 const MIN_RANGE_WIDTH = 1; // in pixels
 
-function useMinWidth(value: number) {
-  const [minWidth, setMinWidth] = useState(value);
-  
-  const resetMinWidth = () => setMinWidth(value);
-  const unsetMinWidth = () => setMinWidth(0);
-
-  return {minWidth, resetMinWidth, unsetMinWidth};
-}
-
 // todo split into two components waveform and range
 const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +28,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
   const [range, setRange] = useState<Range | null>(null);
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
-  const {minWidth, resetMinWidth, unsetMinWidth} = useMinWidth(MIN_RANGE_WIDTH);
+  const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
 
   max = max || 1;
 
@@ -91,7 +82,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
     const currentRange = draftRange || range;
 
-    if (currentRange && hasMinWidth(currentRange)) {
+    if (currentRange && (hasMinWidth(currentRange) || ignoreMinWidth)) {
       const { start, end } = currentRange;
 
       const startPx = ratioToOffset(start);
@@ -110,7 +101,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
       ctx.fillRect(startPx, 0, endPx - startPx, canvas.height);
       
-      unsetMinWidth();
+      setIgnoreMinWidth(true);
     }
   }
 
@@ -160,6 +151,8 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const offset = getOffset(e as any);
 
+    setIgnoreMinWidth(false);
+    
     // Check for resize handles first
     const handle = findResizeHandle(offset.x);
 
@@ -173,8 +166,6 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       setDraftRange({ start: offset.ratio, end: offset.ratio });
       setRange(null);  // Clear existing range when starting new selection
     }
-
-    rangeCanvasRef.current!.style.cursor = 'pointer';
 
     // prevent selection when mouse goes outside of canvas while selecting a range
     e.preventDefault();
@@ -205,7 +196,6 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
     setResizeHandle(null);
     setDraftRange(null);
-    resetMinWidth();
 
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
@@ -215,8 +205,6 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       setRange(null);
       onRangeChange?.(null);
     }
-
-    rangeCanvasRef.current!.style.cursor = 'default';
   }
 
   const updateCursor = (e: MouseEvent) => {
@@ -242,7 +230,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
   const offsetToRatio = (offset: number) => (offset / canvasRef.current!.width) * max;
   const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width) / max;
-  const hasMinWidth = (range: Range) => ratioToOffset(range.end - range.start) >= minWidth;
+  const hasMinWidth = (range: Range) => ratioToOffset(range.end - range.start) >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
     drawRange();

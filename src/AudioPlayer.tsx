@@ -17,10 +17,14 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   const [loop, setLoop] = useState(true);
   const [range, setRange] = useState<Range | null>();
 
-  const handleRangeChange = (range: Range | null) => {
-    setRange(range);
+  const handleRangeChange = (newRange: Range | null) => {
+    setRange(newRange);
 
-    // todo if selection start changed, seek to it
+    if (newRange) {
+      if (newRange.start !== range?.start) {
+        seek(newRange.start);
+      }
+    }
   }
 
   const toggleLoop = () => {
