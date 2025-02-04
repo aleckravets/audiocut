@@ -9,7 +9,7 @@ export interface Range {
 
 interface WaveformProps {
   fileUrl: string;
-  max?: number; // defaults to 1
+  max?: number | null; // defaults to 1
   onRangeChange?: (newRange: Range | null) => void;
 }
 

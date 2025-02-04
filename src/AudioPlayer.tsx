@@ -4,6 +4,7 @@ import 'rc-slider/assets/index.css';
 import Waveform from './Waveform';
 import style from './AudioPlayer.module.scss';
 import { Range } from './Waveform';
+import { useAudio } from './useAudio';
 
 interface AudioPlayerProps {
   fileUrl: string;
@@ -11,79 +12,16 @@ interface AudioPlayerProps {
 
 // duration and positions are in seconds (float)
 const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>();
-  const [volume, setVolume] = useState(1);
+  const {currentTime, volume, playing, duration, setVolume, togglePlay, stop, seek} = useAudio(fileUrl);
   const [savedVolume, setSavedVolume] = useState(volume);
-  const [currentTime, setCurrentTime] = useState(0);
   const [loop, setLoop] = useState(true);
   const [range, setRange] = useState<Range | null>();
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    if (fileUrl) {
-      const audio = new Audio(fileUrl);
-
-      audio.volume = volume;
-
-      audio.addEventListener('timeupdate', () => {
-        setCurrentTime(audio.currentTime)
-      });
-
-      audio.addEventListener('loadedmetadata', () => {
-      });
-
-      audio.addEventListener('play', () => setPlaying(true));
-      audio.addEventListener('pause', () => setPlaying(false));
-
-      setAudio(audio);
-
-      return () => {
-        // audio won't be garbage-collected until paused
-        audio.pause();
-      }
-    }
-
-    setAudio(null);
-  }, [fileUrl]);
-
-  useEffect(() => {
-    // todo ensure we're inside selection and looping
-  }, [audio, range, loop])
-
-  useEffect(() => {
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [audio, volume]);
-
-  useEffect(() => {
-    if (audio) {
-
-    }
-  }, [audio, range])
 
   const handleRangeChange = (range: Range | null) => {
     setRange(range);
 
     // todo if selection start changed, seek to it
   }
-
-  const togglePlay = () => {
-    if (audio) {
-      if (audio.paused) {
-        audio.play();
-      } else {
-        audio.pause();
-      }
-    }
-  };
-
-  const stop = () => {
-    if (audio) {
-      audio.pause();
-      audio.currentTime = range?.start || 0;
-    }
-  };
 
   const toggleLoop = () => {
     setLoop(!loop);
@@ -95,7 +33,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
     }
   }
 
-  const toggleMuted = () => {
+  const toggleMute = () => {
     if (volume === 0) {
       setVolume(savedVolume);
     }
@@ -117,8 +55,8 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
           />
           Loop
         </label>
-        {audio && <p>Current time: {formatTime(currentTime)}</p>}
-        <button onClick={toggleMuted}>{volume === 0 ? 'Unmute' : 'Mute'}</button>
+        {currentTime !== null && <p>Current time: {formatTime(currentTime)}</p>}
+        <button onClick={toggleMute}>{volume === 0 ? 'Unmute' : 'Mute'}</button>
         <label>
           Volume:
           <Slider
@@ -135,7 +73,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
       <div className={style.trackContainer}>
         <Waveform
           fileUrl={fileUrl}
-          max={audio?.duration}
+          max={duration}
           onRangeChange={handleRangeChange}
         />
         <p>
