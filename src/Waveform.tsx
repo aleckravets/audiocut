@@ -120,39 +120,36 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     return null;
   }
 
-  const getCoordinates = (e: MouseEvent | TouchEvent): { x: number, percent: number } | null => {
+  const getOffset = (e: MouseEvent | TouchEvent): {x: number, ratio: number} => {
     let clientX: number;
 
     if ('touches' in e) {
       // Touch event
       if (e.touches.length === 0) {
-        return null;
+        throw new Error('Failed to get offset for touch event');
       }
       clientX = e.touches[0].clientX;
     } else {
       // Mouse event
-      clientX = e.clientX
+      clientX = e.clientX;
     }
 
-    const rect = canvasRef.current!.getBoundingClientRect();
+    const {left, right} = canvasRef.current!.getBoundingClientRect();
 
-    const x = clientX - rect.left;
+    const x = clientX < left ? 0 : (clientX > right ? right - left : clientX - left);
+    const ratio = offsetToRatio(x);
 
     return {
       x,
-      percent: offsetToRatio(x)
-    }
+      ratio
+    };
   }
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const coords = getCoordinates(e as any);
-
-    if (!coords) {
-      return;
-    }
+    const offset = getOffset(e as any);
 
     // Check for resize handles first
-    const handle = findResizeHandle(coords.x);
+    const handle = findResizeHandle(offset.x);
 
     if (handle) {
       setResizeHandle(handle);
@@ -161,7 +158,7 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     else {
       // If not resizing, start new range
       setResizeHandle('end');
-      setDraftRange({ start: coords.percent, end: coords.percent });
+      setDraftRange({ start: offset.ratio, end: offset.ratio });
       setRange(null);  // Clear existing range when starting new selection
     }
 
@@ -174,14 +171,10 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
       return;
     }
 
-    const coords = getCoordinates(e);
+    const offset = getOffset(e);
 
-    if (!coords) {
-      return;
-    }
-
-    let start = resizeHandle === 'start' ? coords.percent : draftRange.start;
-    let end = resizeHandle === 'end' ? coords.percent : draftRange.end;
+    let start = resizeHandle === 'start' ? offset.ratio : draftRange.start;
+    let end = resizeHandle === 'end' ? offset.ratio : draftRange.end;
 
     if (start > end) {
       [start, end] = [end, start];
