@@ -16,7 +16,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   const [savedVolume, setSavedVolume] = useState(volume);
   const [currentTime, setCurrentTime] = useState(0);
   const [loop, setLoop] = useState(true);
-  const [selection, setSelection] = useState<Range | null>();
+  const [range, setRange] = useState<Range | null>();
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
 
   useEffect(() => {
     // todo ensure we're inside selection and looping
-  }, [audio, selection, loop])
+  }, [audio, range, loop])
 
   useEffect(() => {
     if (audio) {
@@ -60,10 +60,10 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
     if (audio) {
 
     }
-  }, [audio, selection])
+  }, [audio, range])
 
-  const handleSelectionChange = (newSelection: Range | null) => {
-    setSelection(newSelection);
+  const handleRangeChange = (range: Range | null) => {
+    setRange(range);
 
     // todo if selection start changed, seek to it
   }
@@ -81,7 +81,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   const stop = () => {
     if (audio) {
       audio.pause();
-      audio.currentTime = selection?.start || 0;
+      audio.currentTime = range?.start || 0;
     }
   };
 
@@ -135,10 +135,11 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
       <div className={style.trackContainer}>
         <Waveform
           fileUrl={fileUrl}
-          onSelectionChange={handleSelectionChange}
+          max={audio?.duration}
+          onRangeChange={handleRangeChange}
         />
         <p>
-          {selection && JSON.stringify(selection)}
+          {range && formatTimeRange(range.start, range.end)}
         </p>
       </div>
     </div>

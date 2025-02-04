@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 
-// expressed as ratio of canvas width (0-1)
 export interface Range {
   start: number;
   end: number;
@@ -10,7 +9,8 @@ export interface Range {
 
 interface WaveformProps {
   fileUrl: string;
-  onSelectionChange: (newSelection: Range | null) => void;
+  max?: number; // defaults to 1
+  onRangeChange?: (newRange: Range | null) => void;
 }
 
 type ResizeHandle = 'start' | 'end';
@@ -19,7 +19,7 @@ const RESIZE_HANDLE_WIDTH = 10; // in pixels
 const MIN_RANGE_WIDTH = 1; // in pixels
 
 // todo split into two components waveform and range
-const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
+const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rangeCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,7 +27,8 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
   const [range, setRange] = useState<Range | null>(null);
   const [draftRange, setDraftRange] = useState<Range | null>(null);
-  const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null)
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
+  max = max || 1;
 
   useEffect(() => {
     const loadAudio = async () => {
@@ -194,11 +195,11 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
-      onSelectionChange(draftRange);
+      onRangeChange?.(draftRange);
     }
     else {
       setRange(null);
-      onSelectionChange(null);
+      onRangeChange?.(null);
     }
   }
 
@@ -217,8 +218,8 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     }
   }
 
-  const offsetToRatio = (pixel: number) => (pixel / canvasRef.current!.width);
-  const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width);
+  const offsetToRatio = (offset: number) => (offset / canvasRef.current!.width) * max;
+  const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width) / max;
   const hasMinWidth = (range: Range) => ratioToOffset(range.end - range.start) >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
