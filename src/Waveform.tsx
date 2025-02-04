@@ -163,6 +163,8 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       setRange(null);  // Clear existing range when starting new selection
     }
 
+    rangeCanvasRef.current!.style.cursor = 'pointer';
+
     // prevent selection when mouse goes outside of canvas while selecting a range
     e.preventDefault();
   }
@@ -201,6 +203,8 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
       setRange(null);
       onRangeChange?.(null);
     }
+
+    rangeCanvasRef.current!.style.cursor = 'default';
   }
 
   const updateCursor = (e: MouseEvent) => {
