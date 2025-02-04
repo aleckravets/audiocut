@@ -209,12 +209,18 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     const rect = canvas.getBoundingClientRect();
 
     const x = e.clientX - rect.left;
-    const handle = findResizeHandle(x)
+    const handle = findResizeHandle(x);
 
-    if (handle) {
-      canvas.style.cursor = 'ew-resize'
-    } else {
-      canvas.style.cursor = 'pointer'
+    if (draftRange) {
+      if (range) {
+        canvas.style.cursor = 'ew-resize';
+      }
+      else {
+        canvas.style.cursor = 'pointer';
+      }
+    }
+    else {
+        canvas.style.cursor = handle ? 'ew-resize' : 'default';
     }
   }
 
