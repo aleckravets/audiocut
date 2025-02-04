@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 
+// expressed as ratio of canvas width (0-1)
 export interface Range {
   start: number;
   end: number;
@@ -14,11 +15,10 @@ interface WaveformProps {
 
 type ResizeHandle = 'start' | 'end';
 
-const RESIZE_HANDLE_WIDTH = 10;
-const MIN_RANGE_WIDTH = 0.01;
+const RESIZE_HANDLE_WIDTH = 10; // in pixels
+const MIN_RANGE_WIDTH = 1; // in pixels
 
-const hasMinRangeWidth = (range: Range) => range.end - range.start > MIN_RANGE_WIDTH;
-
+// todo split into two components waveform and range
 const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -81,11 +81,11 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
     const currentRange = draftRange || range;
 
-    if (currentRange && hasMinRangeWidth(currentRange)) {
+    if (currentRange && hasMinWidth(currentRange)) {
       const { start, end } = currentRange;
 
-      const startPx = percentToPixel(start)
-      const endPx = percentToPixel(end)
+      const startPx = ratioToOffset(start)
+      const endPx = ratioToOffset(end)
 
       ctx.beginPath()
       ctx.strokeStyle = '#ffa500'
@@ -104,8 +104,8 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
   const findResizeHandle = (x: number): ResizeHandle | null => {
     if (range) {
-      const startPx = percentToPixel(range.start)
-      const endPx = percentToPixel(range.end)
+      const startPx = ratioToOffset(range.start)
+      const endPx = ratioToOffset(range.end)
 
       // Check if near start edge
       if (Math.abs(x - startPx) <= RESIZE_HANDLE_WIDTH) {
@@ -120,7 +120,7 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     return null;
   }
 
-  const getCoordinates = (e: React.MouseEvent | React.TouchEvent): { x: number, percent: number } | null => {
+  const getCoordinates = (e: MouseEvent | TouchEvent): { x: number, percent: number } | null => {
     let clientX: number;
 
     if ('touches' in e) {
@@ -140,12 +140,12 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
 
     return {
       x,
-      percent: pixelToPercent(x)
+      percent: offsetToRatio(x)
     }
   }
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const coords = getCoordinates(e);
+    const coords = getCoordinates(e as any);
 
     if (!coords) {
       return;
@@ -164,9 +164,12 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
       setDraftRange({ start: coords.percent, end: coords.percent });
       setRange(null);  // Clear existing range when starting new selection
     }
+
+    // prevent selection when mouse goes outside of canvas while selecting a range
+    e.preventDefault();
   }
 
-  const handleMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const handleMove = (e: MouseEvent | TouchEvent) => {
     if (!draftRange) {
       return;
     }
@@ -196,7 +199,7 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     setResizeHandle(null);
     setDraftRange(null);
 
-    if (hasMinRangeWidth(draftRange)) {
+    if (hasMinWidth(draftRange)) {
       setRange(draftRange);
       onSelectionChange(draftRange);
     }
@@ -206,41 +209,44 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     }
   }
 
-  const updateCursor = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = rangeCanvasRef.current?.getBoundingClientRect()
-    if (!rect) return
+  const updateCursor = (e: MouseEvent) => {
+    const canvas = rangeCanvasRef.current!;
+
+    const rect = canvas.getBoundingClientRect();
 
     const x = e.clientX - rect.left;
     const handle = findResizeHandle(x)
 
     if (handle) {
-      e.currentTarget.style.cursor = 'ew-resize'
+      canvas.style.cursor = 'ew-resize'
     } else {
-      e.currentTarget.style.cursor = 'pointer'
+      canvas.style.cursor = 'pointer'
     }
   }
 
-  // Convert pixel position to percentage
-  const pixelToPercent = (pixel: number): number => {
-    if (!canvasRef.current) return 0
-    return (pixel / canvasRef.current.width) * 100
-  }
-
-  // Convert percentage to pixel position
-  const percentToPixel = (percent: number): number => {
-    if (!canvasRef.current) return 0
-    return (percent * canvasRef.current.width) / 100
-  }
+  const offsetToRatio = (pixel: number) => (pixel / canvasRef.current!.width);
+  const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width);
+  const hasMinWidth = (range: Range) => ratioToOffset(range.end - range.start) >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
     drawRange();
   }, [range, draftRange]);
 
   useEffect(() => {
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mousemove', updateCursor);
+
+    document.addEventListener('touchmove', handleMove);
+    
     document.addEventListener('mouseup', handleEnd);
     document.addEventListener('touchend', handleEnd);
 
     return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mousemove', updateCursor);
+
+      document.removeEventListener('touchmove', handleMove);
+
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchend', handleEnd);
     }
@@ -265,8 +271,6 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
     }
   }, []);
 
-  // console.log(draftRange);
-
   return (
     <div ref={containerRef} className={style.container}>
       <canvas ref={canvasRef} />
@@ -274,13 +278,6 @@ const Waveform = ({ fileUrl, onSelectionChange }: WaveformProps) => {
         ref={rangeCanvasRef}
         onMouseDown={handleStart}
         onTouchStart={handleStart}
-        onMouseMove={(e) => {
-          handleMove(e);
-          updateCursor(e);
-        }}
-        onTouchMove={handleMove}
-        onMouseUp={handleEnd}
-        onTouchEnd={handleEnd}
       />
     </div>
   );

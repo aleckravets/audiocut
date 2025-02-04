@@ -138,7 +138,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
           onSelectionChange={handleSelectionChange}
         />
         <p>
-          {selection && formatTimeRange(selection.start, selection.end)}
+          {selection && JSON.stringify(selection)}
         </p>
       </div>
     </div>
