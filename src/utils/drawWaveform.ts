@@ -1,9 +1,6 @@
 const lineOffset = 0.5;
 
-export function drawWaveform(
-  canvas: HTMLCanvasElement,
-  audioBuffer: AudioBuffer
-) {
+export function drawWaveform(canvas: HTMLCanvasElement, audioBuffer: AudioBuffer) {
   const rawData = audioBuffer.getChannelData(0);
   const barWidth = 2;
   const gap = 1;

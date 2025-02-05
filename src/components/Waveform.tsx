@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
-import { drawWaveform } from './drawWaveform';
+import { drawWaveform } from '../utils/drawWaveform';
 
 export interface Range {
   start: number;
@@ -9,7 +9,7 @@ export interface Range {
 
 interface WaveformProps {
   fileUrl: string;
-  max?: number | null; // defaults to 1
+  duration: number | null;
   onRangeChange?: (newRange: Range | null) => void;
 }
 
@@ -19,7 +19,7 @@ const RESIZE_HANDLE_WIDTH = 10; // in pixels
 const MIN_RANGE_WIDTH = 1; // in pixels
 
 // todo split into two components waveform and range
-const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
+const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rangeCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -29,8 +29,6 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
-
-  max = max || 1;
 
   useEffect(() => {
     const loadAudio = async () => {
@@ -74,35 +72,28 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     }
   }, [audioBuffer]);
 
-  const drawRange = () => {
-    const canvas = rangeCanvasRef.current!;
+  const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
     const ctx = canvas.getContext('2d')!;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const currentRange = draftRange || range;
+    const { start, end } = range;
 
-    if (currentRange && (hasMinWidth(currentRange) || ignoreMinWidth)) {
-      const { start, end } = currentRange;
+    const startPx = ratioToOffset(start);
+    const endPx = ratioToOffset(end);
 
-      const startPx = ratioToOffset(start);
-      const endPx = ratioToOffset(end);
+    ctx.beginPath();
+    ctx.strokeStyle = '#ffa500';
+    ctx.lineWidth = 2;
 
-      ctx.beginPath();
-      ctx.strokeStyle = '#ffa500';
-      ctx.lineWidth = 2;
+    ctx.moveTo(startPx, 0);
+    ctx.lineTo(startPx, canvas.height);
+    ctx.moveTo(endPx, 0);
+    ctx.lineTo(endPx, canvas.height);
+    ctx.stroke();
 
-      ctx.moveTo(startPx, 0);
-      ctx.lineTo(startPx, canvas.height);
-      ctx.moveTo(endPx, 0);
-      ctx.lineTo(endPx, canvas.height);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
-      ctx.fillRect(startPx, 0, endPx - startPx, canvas.height);
-
-      setIgnoreMinWidth(true);
-    }
+    ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
+    ctx.fillRect(startPx, 0, endPx - startPx, canvas.height);
   }
 
   const findResizeHandle = (x: number): ResizeHandle | null => {
@@ -123,7 +114,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     return null;
   }
 
-  const getOffset = (e: MouseEvent | TouchEvent): { x: number, ratio: number } => {
+  const getOffset = (e: MouseEvent | TouchEvent): { x: number, seconds: number } => {
     let clientX: number;
 
     if ('touches' in e) {
@@ -144,7 +135,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
     return {
       x,
-      ratio
+      seconds: ratio
     };
   }
 
@@ -162,7 +153,7 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     else {
       // If not resizing, start new range
       setResizeHandle('end');
-      setDraftRange({ start: offset.ratio, end: offset.ratio });
+      setDraftRange({ start: offset.seconds, end: offset.seconds });
       setRange(null);  // Clear existing range when starting new selection
     }
 
@@ -179,8 +170,8 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
 
     const offset = getOffset(e);
 
-    let start = resizeHandle === 'start' ? offset.ratio : draftRange.start;
-    let end = resizeHandle === 'end' ? offset.ratio : draftRange.end;
+    let start = resizeHandle === 'start' ? offset.seconds : draftRange.start;
+    let end = resizeHandle === 'end' ? offset.seconds : draftRange.end;
 
     if (start > end) {
       [start, end] = [end, start];
@@ -229,13 +220,18 @@ const Waveform = ({ fileUrl, max, onRangeChange }: WaveformProps) => {
     }
   }
 
-  const offsetToRatio = (offset: number) => (offset / canvasRef.current!.width) * max;
-  const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width) / max;
+  const offsetToRatio = (offset: number) => (offset / canvasRef.current!.width) * duration;
+  const ratioToOffset = (ratio: number) => (ratio * canvasRef.current!.width) / duration;
   const hasMinWidth = (range: Range) => ratioToOffset(range.end - range.start) >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
-    drawRange();
-  }, [range, draftRange]);
+    const currentRange = draftRange || range;
+
+    if (currentRange && (hasMinWidth(currentRange) || ignoreMinWidth)) {
+      drawRange(rangeCanvasRef.current!, currentRange);
+      setIgnoreMinWidth(true);
+    }
+  }, [range, draftRange, ignoreMinWidth]);
 
   useEffect(() => {
     document.addEventListener('mousemove', handleMove);

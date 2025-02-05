@@ -4,7 +4,7 @@ import 'rc-slider/assets/index.css';
 import Waveform from './Waveform';
 import style from './AudioPlayer.module.scss';
 import { Range } from './Waveform';
-import { useAudio } from './useAudio';
+import { useAudio } from '../hooks/useAudio';
 
 interface AudioPlayerProps {
   fileUrl: string;
@@ -93,7 +93,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
       <div className={style.trackContainer}>
         <Waveform
           fileUrl={fileUrl}
-          max={duration}
+          duration={duration}
           onRangeChange={handleRangeChange}
         />
         <p>{range && formatTimeRange(range.start, range.end)}</p>
