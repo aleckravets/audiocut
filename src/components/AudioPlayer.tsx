@@ -14,7 +14,7 @@ interface AudioPlayerProps {
 const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   const [loop, setLoop] = useState(true);
   const [range, setRange] = useState<Range | null>(null);
-  const { currentTime, volume, playing, duration, setVolume, play, togglePlay, stop, seek } = useAudio(fileUrl, { loop });
+  const { currentTime, volume, playing, duration, setVolume, togglePlay, stop, seek } = useAudio(fileUrl, { loop });
   const [savedVolume, setSavedVolume] = useState(volume);
 
   const handleRangeChange = (newRange: Range | null) => {
@@ -94,7 +94,9 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
         <Waveform
           fileUrl={fileUrl}
           duration={duration}
+          currentTime={currentTime}
           onRangeChange={handleRangeChange}
+          onSeek={seek}
         />
         <p>{range && formatTimeRange(range.start, range.end)}</p>
         <p>{currentTime} / {duration}</p>

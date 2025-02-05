@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Options {
     loop?: boolean;
@@ -11,12 +11,12 @@ export function useAudio(fileUrl: string, options?: Options) {
     const [duration, setDuration] = useState<number | null>(null);
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
+    const animationFrameId = useRef<number | null>(null);
 
     useEffect(() => {
         if (fileUrl) {
             const audio = new Audio(fileUrl);
 
-            audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
             audio.addEventListener('ended', () => setCurrentTime(audio.duration));
 
             audio.addEventListener('loadedmetadata', () => {
@@ -42,6 +42,23 @@ export function useAudio(fileUrl: string, options?: Options) {
         setDuration(null);
         setPlaying(false);
     }, [fileUrl]);
+
+    useEffect(() => {
+        const updateCurrentTime = () => {
+          if (audio) {
+            setCurrentTime(audio.currentTime);
+          }
+          animationFrameId.current = requestAnimationFrame(updateCurrentTime);
+        };
+    
+        animationFrameId.current = requestAnimationFrame(updateCurrentTime);
+    
+        return () => {
+          if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+          }
+        };
+      }, [audio]);
 
     useEffect(() => {
         if (audio && loop !== undefined) {

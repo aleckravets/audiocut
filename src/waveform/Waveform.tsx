@@ -10,16 +10,19 @@ import { clearCanvas } from './clearCanvas';
 interface WaveformProps {
   fileUrl: string;
   duration?: number | null;
+  currentTime?: number | null;
   onRangeChange?: (newRange: Range | null) => void;
+  onSeek?: (time: number) => void;
 }
 
 const MIN_RANGE_WIDTH = 1; // in pixels
 
 // todo split into two components waveform and range
-const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
+const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rangeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const currentTimeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
 
   const [range, setRange] = useState<Range | null>(null);
@@ -48,11 +51,12 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
   }, [fileUrl]);
 
   useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    const rangeCanvas = rangeCanvasRef.current;
+    const container = containerRef.current!;
+    const canvas = canvasRef.current!;
+    const rangeCanvas = rangeCanvasRef.current!;
+    const currentTimeCanvas = currentTimeCanvasRef.current!;
 
-    if (audioBuffer && container && canvas && rangeCanvas) {
+    if (audioBuffer) {
       const observer = new ResizeObserver(() => {
         // Adjust for high-DPI screens (e.g., Retina displays)
         const dpr = window.devicePixelRatio || 1;
@@ -61,6 +65,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
         canvas.height = container.clientHeight;// * dpr;
 
         rangeCanvas.width = canvas.width;
+        currentTimeCanvas.width = canvas.width;
 
         drawWaveform(canvas, audioBuffer);
       });
@@ -71,7 +76,24 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     }
   }, [audioBuffer]);
 
+  useEffect(() => {
+    const canvas = currentTimeCanvasRef.current!;
 
+    const ctx = canvas.getContext('2d')!;
+
+    clearCanvas(canvas);
+
+    // Calculate x position based on current time
+    const x = currentTime ? timeToOffset(currentTime) : 0;
+
+    // Draw the vertical line (current time)
+    ctx.beginPath();
+    ctx.strokeStyle = '#ffa500';
+    ctx.lineWidth = 2;
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }, [currentTime, audioBuffer]);
 
   const getOffset = (e: MouseEvent | TouchEvent) => {
     let clientX: number;
@@ -145,12 +167,13 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
 
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
-      const rangeInSeconds = { start: offsetToSeconds(draftRange.start), end: offsetToSeconds(draftRange.end) };
+      const rangeInSeconds = { start: offsetToTime(draftRange.start), end: offsetToTime(draftRange.end) };
       onRangeChange?.(rangeInSeconds);
     }
     else {
       setRange(null);
       onRangeChange?.(null);
+      onSeek?.(offsetToTime(draftRange.start));
     }
   }
 
@@ -175,7 +198,8 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     }
   }
 
-  const offsetToSeconds = (offset: number) => (offset / canvasRef.current!.width) * duration;
+  const offsetToTime = (offset: number) => (offset / canvasRef.current!.width) * duration;
+  const timeToOffset = (time: number) => (time / duration) * canvasRef.current!.width;
   const hasMinWidth = (range: Range) => range.end - range.start >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
@@ -233,6 +257,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
   return (
     <div ref={containerRef} className={style.container}>
       <canvas ref={canvasRef} />
+      <canvas ref={currentTimeCanvasRef} />
       <canvas
         ref={rangeCanvasRef}
         onMouseDown={handleStart}
