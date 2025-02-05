@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from '../utils/drawWaveform';
-import { drawRange, Range } from '../utils/drawRange';
+import { drawRange, Range, ResizeEdge, getResizeEdgeByOffset } from '../utils/rangeUtils';
 import { clearCanvas } from '../utils/clearCanvas';
 
 interface WaveformProps {
@@ -10,9 +10,6 @@ interface WaveformProps {
   onRangeChange?: (newRange: Range | null) => void;
 }
 
-type ResizeHandle = 'start' | 'end';
-
-const RESIZE_HANDLE_WIDTH = 10; // in pixels
 const MIN_RANGE_WIDTH = 1; // in pixels
 
 // todo split into two components waveform and range
@@ -24,7 +21,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
 
   const [range, setRange] = useState<Range | null>(null);
   const [draftRange, setDraftRange] = useState<Range | null>(null);
-  const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
+  const [resizeEdge, setResizeEdge] = useState<ResizeEdge | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
 
   duration = duration || 1;
@@ -71,20 +68,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     }
   }, [audioBuffer]);
 
-  const findResizeHandle = (x: number): ResizeHandle | null => {
-    if (range) {
-      // Check if near start edge
-      if (Math.abs(x - range.start) <= RESIZE_HANDLE_WIDTH) {
-        return 'start';
-      }
-      // Check if near end edge
-      if (Math.abs(x - range.end) <= RESIZE_HANDLE_WIDTH) {
-        return 'end';
-      }
-    }
 
-    return null;
-  }
 
   const getOffset = (e: MouseEvent | TouchEvent) => {
     let clientX: number;
@@ -111,15 +95,15 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     setIgnoreMinWidth(false);
 
     // Check for resize handles first
-    const handle = findResizeHandle(offset);
+    const resizeEdge = range && getResizeEdgeByOffset(range, offset);
 
-    if (handle) {
-      setResizeHandle(handle);
+    if (resizeEdge) {
+      setResizeEdge(resizeEdge);
       setDraftRange(range);
     }
     else {
       // If not resizing, start new range
-      setResizeHandle('end');
+      setResizeEdge('end');
       setDraftRange({ start: offset, end: offset });
       setRange(null);  // Clear existing range when starting new selection
     }
@@ -137,12 +121,12 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
 
     const offset = getOffset(e);
 
-    let start = resizeHandle === 'start' ? offset : draftRange.start;
-    let end = resizeHandle === 'end' ? offset : draftRange.end;
+    let start = resizeEdge === 'start' ? offset : draftRange.start;
+    let end = resizeEdge === 'end' ? offset : draftRange.end;
 
     if (start > end) {
       [start, end] = [end, start];
-      setResizeHandle(resizeHandle === 'start' ? 'end' : 'start')
+      setResizeEdge(resizeEdge === 'start' ? 'end' : 'start')
     }
 
     setDraftRange({ start, end });
@@ -153,7 +137,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
       return;
     }
 
-    setResizeHandle(null);
+    setResizeEdge(null);
     setDraftRange(null);
 
     if (hasMinWidth(draftRange)) {
@@ -173,7 +157,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     const rect = canvas.getBoundingClientRect();
 
     const x = e.clientX - rect.left;
-    const handle = findResizeHandle(x);
+    const resizeEdge = range && getResizeEdgeByOffset(range, x);
 
     if (draftRange) {
       if (range) {
@@ -184,7 +168,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
       }
     }
     else {
-      canvas.style.cursor = handle ? 'ew-resize' : 'text';
+      canvas.style.cursor = resizeEdge ? 'ew-resize' : 'text';
     }
   }
 

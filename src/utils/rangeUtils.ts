@@ -21,3 +21,21 @@ export const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
     ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
     ctx.fillRect(start, 0, end - start, canvas.height);
 }
+
+export type ResizeEdge = 'start' | 'end';
+const RESIZE_EDGE_WIDTH = 10; // in pixels
+
+export const getResizeEdgeByOffset = (range: Range, offset: number): ResizeEdge | null => {
+    if (range) {
+      // Check if near start edge
+      if (Math.abs(offset - range.start) <= RESIZE_EDGE_WIDTH) {
+        return 'start';
+      }
+      // Check if near end edge
+      if (Math.abs(offset - range.end) <= RESIZE_EDGE_WIDTH) {
+        return 'end';
+      }
+    }
+
+    return null;
+  }
