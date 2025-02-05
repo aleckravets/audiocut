@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
-import { drawWaveform } from '../utils/drawWaveform';
-import { drawRange, Range, ResizeEdge, getResizeEdgeByOffset } from '../utils/rangeUtils';
-import { clearCanvas } from '../utils/clearCanvas';
+import { drawWaveform } from './drawWaveform';
+import { drawRange, Range, ResizeEdge, getResizeEdgeByOffset } from './rangeUtils';
+import { clearCanvas } from './clearCanvas';
 
 interface WaveformProps {
   fileUrl: string;

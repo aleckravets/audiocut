@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import Waveform from './Waveform';
+import Waveform from '../waveform/Waveform';
 import style from './AudioPlayer.module.scss';
-import { Range } from './Waveform';
+import { Range } from '../waveform/Waveform';
 import { useAudio } from '../hooks/useAudio';
 
 interface AudioPlayerProps {
