@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from '../utils/drawWaveform';
-
-export interface Range {
-  start: number;
-  end: number;
-}
+import { drawRange, Range } from '../utils/drawRange';
+import { clearCanvas } from '../utils/clearCanvas';
 
 interface WaveformProps {
   fileUrl: string;
@@ -29,7 +26,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
-  
+
   duration = duration || 1;
 
   useEffect(() => {
@@ -73,31 +70,6 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
       return () => observer.disconnect();
     }
   }, [audioBuffer]);
-
-  const clearCanvas = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext('2d')!;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
-    const ctx = canvas.getContext('2d')!;
-
-    const { start, end } = range;
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#ffa500';
-    ctx.lineWidth = 2;
-
-    ctx.moveTo(start, 0);
-    ctx.lineTo(start, canvas.height);
-    ctx.moveTo(end, 0);
-    ctx.lineTo(end, canvas.height);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
-    ctx.fillRect(start, 0, end - start, canvas.height);
-  }
 
   const findResizeHandle = (x: number): ResizeHandle | null => {
     if (range) {
@@ -186,7 +158,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
 
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
-      const rangeInSeconds = {start: offsetToSeconds(draftRange.start), end: offsetToSeconds(draftRange.end)};
+      const rangeInSeconds = { start: offsetToSeconds(draftRange.start), end: offsetToSeconds(draftRange.end) };
       onRangeChange?.(rangeInSeconds);
     }
     else {
