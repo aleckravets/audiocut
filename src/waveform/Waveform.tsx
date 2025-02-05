@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
-import { drawRange, Range, ResizeEdge, getResizeEdgeByOffset } from './rangeUtils';
+import { drawRange } from './drawRange';
+import { Range } from "./Range";
+import { ResizeEdge } from "./getResizeEdge";
+import { getResizeEdge } from "./getResizeEdge";
 import { clearCanvas } from './clearCanvas';
 
 interface WaveformProps {
@@ -95,7 +98,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     setIgnoreMinWidth(false);
 
     // Check for resize handles first
-    const resizeEdge = range && getResizeEdgeByOffset(range, offset);
+    const resizeEdge = range && getResizeEdge(range, offset);
 
     if (resizeEdge) {
       setResizeEdge(resizeEdge);
@@ -157,7 +160,7 @@ const Waveform = ({ fileUrl, duration, onRangeChange }: WaveformProps) => {
     const rect = canvas.getBoundingClientRect();
 
     const x = e.clientX - rect.left;
-    const resizeEdge = range && getResizeEdgeByOffset(range, x);
+    const resizeEdge = range && getResizeEdge(range, x);
 
     if (draftRange) {
       if (range) {
