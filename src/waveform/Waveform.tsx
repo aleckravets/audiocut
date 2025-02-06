@@ -83,17 +83,19 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
     clearCanvas(canvas);
 
-    // Calculate x position based on current time
-    const x = currentTime ? timeToOffset(currentTime) : 0;
+    if (currentTime !== null && currentTime !== undefined) {
+      // Calculate x position based on current time
+      const x = timeToOffset(currentTime);
 
-    // Draw the vertical line (current time)
-    ctx.beginPath();
-    ctx.strokeStyle = '#ffa500';
-    ctx.lineWidth = 2;
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
-    ctx.stroke();
-  }, [currentTime, audioBuffer]);
+      // Draw the vertical line (current time)
+      ctx.beginPath();
+      ctx.strokeStyle = '#ffa500';
+      ctx.lineWidth = 2;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+  }, [currentTime]);
 
   const getOffset = (e: MouseEvent | TouchEvent) => {
     let clientX: number;

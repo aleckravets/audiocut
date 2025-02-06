@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Waveform from '../waveform/Waveform';
 import style from './AudioPlayer.module.scss';
-import { Range } from '../waveform/Waveform';
 import { useAudio } from '../hooks/useAudio';
+import { Range } from "../waveform/Range";
+import { useAudioTime } from '../hooks/useAudioTime';
 
 interface AudioPlayerProps {
   fileUrl: string;
@@ -14,7 +15,8 @@ interface AudioPlayerProps {
 const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   const [loop, setLoop] = useState(true);
   const [range, setRange] = useState<Range | null>(null);
-  const { currentTime, volume, playing, duration, setVolume, togglePlay, stop, seek } = useAudio(fileUrl, { loop });
+  const { audio, volume, status, duration, setVolume, togglePlay, pause, seek } = useAudio(fileUrl, { loop });
+  const currentTime = useAudioTime(audio);
   const [savedVolume, setSavedVolume] = useState(volume);
 
   const handleRangeChange = (newRange: Range | null) => {
@@ -34,7 +36,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
           seek(range.start);
         }
         else {
-          stop();
+          pause();
         }
       }
       if (currentTime < range.start) {
@@ -65,8 +67,7 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
   return (
     <div>
       <div className={style.controls}>
-        <button onClick={togglePlay}>{playing ? 'Pause' : 'Play'}</button>
-        <button onClick={stop}>Stop</button>
+        <button onClick={togglePlay}>{status === 'playing' ? 'Pause' : 'Play'}</button>
         <label>
           <input
             type="checkbox"

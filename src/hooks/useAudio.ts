@@ -1,23 +1,21 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 interface Options {
     loop?: boolean;
 }
 
+type AudioStatus = 'playing' | 'paused';
+
 export function useAudio(fileUrl: string, options?: Options) {
-    const {loop} = options || {};
-    const [audio, setAudio] = useState<HTMLAudioElement | null>();
-    const [currentTime, setCurrentTime] = useState<number | null>(null);
+    const { loop } = options || {};
+    const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
     const [duration, setDuration] = useState<number | null>(null);
-    const [playing, setPlaying] = useState(false);
+    const [status, setStatus] = useState<AudioStatus | null>(null);
     const [volume, setVolume] = useState(1);
-    const animationFrameId = useRef<number | null>(null);
 
     useEffect(() => {
         if (fileUrl) {
             const audio = new Audio(fileUrl);
-
-            audio.addEventListener('ended', () => setCurrentTime(audio.duration));
 
             audio.addEventListener('loadedmetadata', () => {
                 setDuration(audio.duration);
@@ -25,11 +23,11 @@ export function useAudio(fileUrl: string, options?: Options) {
 
             audio.addEventListener('volumechange', () => setVolume(audio.volume));
 
-            audio.addEventListener('play', () => setPlaying(true));
-            audio.addEventListener('pause', () => setPlaying(false));
+            audio.addEventListener('play', () => setStatus('playing'));
+            audio.addEventListener('pause', () => setStatus('paused'));
 
             setAudio(audio);
-            setPlaying(false);
+            setStatus('paused');
 
             return () => {
                 // audio should be paused to let it be garbage-collected
@@ -38,27 +36,9 @@ export function useAudio(fileUrl: string, options?: Options) {
         }
 
         setAudio(null);
-        setCurrentTime(null);
+        setStatus(null);
         setDuration(null);
-        setPlaying(false);
     }, [fileUrl]);
-
-    useEffect(() => {
-        const updateCurrentTime = () => {
-          if (audio) {
-            setCurrentTime(audio.currentTime);
-          }
-          animationFrameId.current = requestAnimationFrame(updateCurrentTime);
-        };
-    
-        animationFrameId.current = requestAnimationFrame(updateCurrentTime);
-    
-        return () => {
-          if (animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-          }
-        };
-      }, [audio]);
 
     useEffect(() => {
         if (audio && loop !== undefined) {
@@ -82,12 +62,11 @@ export function useAudio(fileUrl: string, options?: Options) {
         }
     }
 
-    const stop = () => {
+    const pause = () => {
         if (audio) {
             audio.pause();
-            audio.currentTime = 0;
         }
-    };
+    }
 
     const seek = (time: number) => {
         if (audio) {
@@ -104,12 +83,11 @@ export function useAudio(fileUrl: string, options?: Options) {
     return {
         audio,
         duration,
-        currentTime,
-        playing,
+        status,
         volume,
         play,
         togglePlay,
-        stop,
+        pause,
         seek,
         setVolume: setUserVolume
     };
