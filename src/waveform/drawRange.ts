@@ -1,4 +1,4 @@
-import { Range } from "./Range";
+import { Range } from "../types/Range";
 
 export const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
     const ctx = canvas.getContext('2d')!;

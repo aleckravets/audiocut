@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 import { drawRange } from './drawRange';
-import { Range } from "./Range";
+import { Range } from "../types/Range";
 import { ResizeEdge } from "./getResizeEdge";
 import { getResizeEdge } from "./getResizeEdge";
 import { clearCanvas } from './clearCanvas';
@@ -90,7 +90,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
       // Draw the vertical line (current time)
       ctx.beginPath();
       ctx.strokeStyle = '#ffa500';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvas.height);
       ctx.stroke();

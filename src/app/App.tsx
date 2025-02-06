@@ -1,6 +1,6 @@
 import './App.css'
-import AudioPlayer from './AudioPlayer'
-import FilePicker from './FilePicker'
+import AudioPlayer from '../audioPlayer/AudioPlayer'
+import FilePicker from '../filePicker/FilePicker'
 import { useEffect, useState } from 'react';
 
 function App() {

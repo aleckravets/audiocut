@@ -1,4 +1,4 @@
-import { Range } from "./Range";
+import { Range } from "../types/Range";
 
 export type ResizeEdge = 'start' | 'end';
 export const RESIZE_EDGE_WIDTH = 10; // in pixels
