@@ -1,33 +1,17 @@
-import { useState } from 'react';
-import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Waveform from '../waveform/Waveform';
 import style from './AudioPlayer.module.scss';
 import { useAudio } from './useAudio';
+import { Volume } from './Volume';
 
 interface AudioPlayerProps {
   fileUrl: string;
+  onCut?: (start: number, end: number) => void;
 }
 
 // duration and positions are in seconds (float)
-const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
+const AudioPlayer = ({ fileUrl, onCut }: AudioPlayerProps) => {
   const { currentTime, volume, status, duration, setVolume, togglePlay, stop, seek, range, setRange, toggleLoop, loop } = useAudio(fileUrl);
-  const [savedVolume, setSavedVolume] = useState(volume);
-
-  const handleVolumeChangeComplete = (value: number) => {
-    if (value > 0) {
-      setSavedVolume(value);
-    }
-  }
-
-  const toggleMute = () => {
-    if (volume === 0) {
-      setVolume(savedVolume);
-    }
-    else {
-      setVolume(0);
-    }
-  }
 
   return (
     <div>
@@ -43,19 +27,8 @@ const AudioPlayer = ({ fileUrl }: AudioPlayerProps) => {
           Loop
         </label>
         {currentTime !== null && <p>Current time: {formatTime(currentTime)}</p>}
-        <button onClick={toggleMute}>{volume === 0 ? 'Unmute' : 'Mute'}</button>
-        <label>
-          Volume:
-          <Slider
-            min={0}
-            max={1}
-            value={volume}
-            step={0.01}
-            onChange={value => setVolume(value as number)}
-            onChangeComplete={value => handleVolumeChangeComplete(value as number)}
-            className={style.volumeSlider}
-          />
-        </label>
+        <Volume volume={volume} onChange={setVolume} />
+        <button onClick={() => range && onCut?.(range.start, range.end)} disabled={!onCut || !range}>Cut</button>
       </div>
       <div className={style.trackContainer}>
         <Waveform

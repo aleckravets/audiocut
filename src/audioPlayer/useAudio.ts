@@ -32,12 +32,11 @@ export function useAudio(fileUrl: string) {
             return () => {
                 // audio should be paused to let it be garbage-collected
                 audio.pause();
+                setAudio(null);
+                setStatus(null);
+                setDuration(null);
             }
         }
-
-        setAudio(null);
-        setStatus(null);
-        setDuration(null);
     }, [fileUrl]);
 
     useEffect(() => {
