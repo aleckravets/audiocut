@@ -5,7 +5,7 @@ type AudioStatus = 'playing' | 'paused' | 'stopped';
 
 export function useAudio(fileUrl: string) {
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-    const [loop, setLoop] = useState(true);
+    const [loop, setLoop] = useState(false);
     const [duration, setDuration] = useState<number | null>(null);
     const [status, setStatus] = useState<AudioStatus | null>(null);
     const [volume, setVolume] = useState(1);

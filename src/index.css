@@ -13,6 +13,15 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  width: 100vw;
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed #aaa;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
