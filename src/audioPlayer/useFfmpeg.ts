@@ -32,7 +32,7 @@ export function useFfmpeg() {
         await ffmpeg.exec(["-i", "input", "-ss", `${start}`, "-to", `${end}`, "output.mp3"]);
         const fileData = await ffmpeg.readFile("output.mp3");
         const data = new Uint8Array(fileData as ArrayBuffer);
-        return data.buffer;
+        return new File([data.buffer], "output.mp3", { type: "audio/mp3" });
       };
 
       useEffect(() => {

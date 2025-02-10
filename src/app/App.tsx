@@ -7,10 +7,11 @@ import style from './App.module.scss';
 import { Volume } from '../audioPlayer/Volume';
 
 function App() {
-  const [file, setFile] = useState<Blob>();
+  const [file, setFile] = useState<File>();
   const [fileUrl, setFileUrl] = useState<string>('./al-di-meola.mp3');
   const { currentTime, volume, status, duration, setVolume, togglePlay, stop, seek, range, setRange, toggleLoop, loop } = useAudio(fileUrl);
   const ffmpeg = useFfmpeg();
+  const [isEdited, setIsEdited] = useState(false);
 
   useEffect(() => {
     if (file) {
@@ -23,8 +24,21 @@ function App() {
   const handleCut = async (start: number, end: number) => {
     // todo make loaded a promise
     if (ffmpeg.loaded) {
-      const buffer = await ffmpeg.cut(fileUrl, start, end);
-      setFile(new Blob([buffer], { type: "audio/mp3" }));
+      const file = await ffmpeg.cut(fileUrl, start, end);
+      setFile(file);
+      setRange(null);
+      setIsEdited(true);
+    }
+  }
+
+  const handleDownload = () => {
+    if (fileUrl) {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = file!.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 
@@ -45,6 +59,7 @@ function App() {
         {currentTime !== null && <p>Current time: {formatTime(currentTime)}</p>}
         <Volume volume={volume} onChange={setVolume} />
         <button onClick={() => handleCut(range!.start, range!.end)} disabled={!range}>Cut</button>
+        {isEdited && <button onClick={handleDownload} className={style.downloadButton}>Download</button>}
       </div>
       <div className={style.trackContainer}>
         <Waveform
