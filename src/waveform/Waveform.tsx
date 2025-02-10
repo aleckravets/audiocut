@@ -42,6 +42,8 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         setAudioBuffer(audioBuffer);
+        setRange(null);
+        setDraftRange(null);
       } catch (error) {
         console.error('Error loading audio:', error);
       }
