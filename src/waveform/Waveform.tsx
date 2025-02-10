@@ -3,9 +3,8 @@ import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 import { drawRange } from './drawRange';
 import { Range } from "../types/Range";
-import { ResizeEdge } from "./getResizeEdge";
-import { getResizeEdge } from "./getResizeEdge";
-import { clearCanvas } from './clearCanvas';
+import useResizeObserver from '../useResizeObserver';
+import drawCurrentTime from './drawCurrentTime';
 
 interface WaveformProps {
   fileUrl: string;
@@ -16,6 +15,9 @@ interface WaveformProps {
 }
 
 const MIN_RANGE_WIDTH = 1; // in pixels
+
+type ResizeEdge = 'start' | 'end';
+const RESIZE_EDGE_WIDTH = 10; // in pixels
 
 // todo split into two components waveform and range
 const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: WaveformProps) => {
@@ -29,8 +31,13 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeEdge, setResizeEdge] = useState<ResizeEdge | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
+  const { size } = useResizeObserver(containerRef.current);
 
   duration = duration || 1;
+
+  const offsetToTime = (offset: number) => offset * duration;
+  const timeToOffset = (time: number) => time / duration;
+  const hasMinWidth = (range: Range) => (range.end - range.start) * canvasRef.current!.width >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
     const loadAudio = async () => {
@@ -53,51 +60,36 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
   }, [fileUrl]);
 
   useEffect(() => {
-    const container = containerRef.current!;
-    const canvas = canvasRef.current!;
-    const rangeCanvas = rangeCanvasRef.current!;
-    const currentTimeCanvas = currentTimeCanvasRef.current!;
-
     if (audioBuffer) {
-      const observer = new ResizeObserver(() => {
-        // Adjust for high-DPI screens (e.g., Retina displays)
-        const dpr = window.devicePixelRatio || 1;
-
-        canvas.width = container.clientWidth;// * dpr;
-        canvas.height = container.clientHeight;// * dpr;
-
-        rangeCanvas.width = canvas.width;
-        currentTimeCanvas.width = canvas.width;
-
-        drawWaveform(canvas, audioBuffer);
-      });
-
-      observer.observe(containerRef.current!);
-
-      return () => observer.disconnect();
+      const container = containerRef.current!;
+      const canvas = canvasRef.current!;
+      canvas.width = container.clientWidth;
+      drawWaveform(canvas, audioBuffer);
     }
-  }, [audioBuffer]);
+  }, [audioBuffer, size]);
 
   useEffect(() => {
-    const canvas = currentTimeCanvasRef.current!;
+      const rangeCanvas = rangeCanvasRef.current!;
+      rangeCanvas.width = size.width;
+      drawRange(rangeCanvas, range);
+  }, [range, size]);
 
-    const ctx = canvas.getContext('2d')!;
-
-    clearCanvas(canvas);
-
-    if (currentTime !== null && currentTime !== undefined) {
-      // Calculate x position based on current time
+  useEffect(() => {
+    if (currentTime !== null && currentTime !== undefined && size) {
+      const currentTimeCanvas = currentTimeCanvasRef.current!;
       const x = timeToOffset(currentTime);
-
-      // Draw the vertical line (current time)
-      ctx.beginPath();
-      ctx.strokeStyle = '#ffa500';
-      ctx.lineWidth = 1;
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
+      currentTimeCanvas.width = size.width;
+      drawCurrentTime(currentTimeCanvas, x);
     }
-  }, [currentTime]);
+  }, [currentTime, size, timeToOffset]);
+
+  useEffect(() => {
+    if (draftRange && (hasMinWidth(draftRange) || ignoreMinWidth)) {
+      const canvas = rangeCanvasRef.current!;
+      drawRange(canvas, draftRange);
+      setIgnoreMinWidth(true);
+    }
+  }, [draftRange, ignoreMinWidth]);
 
   const getOffset = (e: MouseEvent | TouchEvent) => {
     let clientX: number;
@@ -115,7 +107,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
     const { left, right } = canvasRef.current!.getBoundingClientRect();
 
-    return clientX < left ? 0 : (clientX > right ? right - left : clientX - left);
+    return clientX < left ? 0 : (clientX > right ? right - left : clientX - left) / (right - left);
   }
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -181,13 +173,30 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
     }
   }
 
+  const getResizeEdge = (range: Range, offset: number): ResizeEdge | null => {
+    if (range) {
+      const width = canvasRef.current!.width;
+
+      // Check if near start edge
+      if (Math.abs(offset - range.start) * width <= RESIZE_EDGE_WIDTH) {
+        return 'start';
+      }
+      // Check if near end edge
+      if (Math.abs(offset - range.end) * width <= RESIZE_EDGE_WIDTH) {
+        return 'end';
+      }
+    }
+  
+    return null;
+  }
+
   const updateCursor = (e: MouseEvent) => {
     const canvas = rangeCanvasRef.current!;
 
     const rect = canvas.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const resizeEdge = range && getResizeEdge(range, x);
+    const offset = (e.clientX - rect.left) / (rect.right - rect.left);
+    const resizeEdge = range && getResizeEdge(range, offset);
 
     if (draftRange) {
       if (range) {
@@ -201,23 +210,6 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
       canvas.style.cursor = resizeEdge ? 'ew-resize' : 'text';
     }
   }
-
-  const offsetToTime = (offset: number) => (offset / canvasRef.current!.width) * duration;
-  const timeToOffset = (time: number) => (time / duration) * canvasRef.current!.width;
-  const hasMinWidth = (range: Range) => range.end - range.start >= MIN_RANGE_WIDTH;
-
-  useEffect(() => {
-    const canvas = rangeCanvasRef.current!;
-
-    clearCanvas(canvas);
-
-    const currentRange = draftRange || range;
-
-    if (currentRange && (hasMinWidth(currentRange) || ignoreMinWidth)) {
-      drawRange(canvas, currentRange);
-      setIgnoreMinWidth(true);
-    }
-  }, [range, draftRange, ignoreMinWidth, clearCanvas, draftRange]);
 
   useEffect(() => {
     document.addEventListener('mousemove', handleMove);

@@ -1,7 +1,11 @@
 import { Range } from "../types/Range";
 
-export const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
+export const drawRange = (canvas: HTMLCanvasElement, range: Range | null) => {
     const ctx = canvas.getContext('2d')!;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!range) return;
 
     const { start, end } = range;
 
@@ -16,5 +20,5 @@ export const drawRange = (canvas: HTMLCanvasElement, range: Range) => {
     // ctx.stroke();
 
     ctx.fillStyle = 'rgba(255, 165, 0, 0.2)';
-    ctx.fillRect(start, 0, end - start, canvas.height);
+    ctx.fillRect(start * canvas.width, 0, (end - start) * canvas.width, canvas.height);
 }
