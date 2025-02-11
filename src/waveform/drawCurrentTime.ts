@@ -1,14 +1,18 @@
-const drawCurrentTime = (canvas: HTMLCanvasElement, currentTimeOffset: number) => {
+const drawCurrentTime = (canvas: HTMLCanvasElement, offsetRatio: number | null) => {
     const ctx = canvas.getContext('2d')!;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (typeof offsetRatio !== 'number') return;
+    
+    const offset = offsetRatio * canvas.width;
 
     // Draw the vertical line (current time)
     ctx.beginPath();
     ctx.strokeStyle = '#ffa500';
     ctx.lineWidth = 1;
-    ctx.moveTo(currentTimeOffset, 0);
-    ctx.lineTo(currentTimeOffset, canvas.height);
+    ctx.moveTo(offset, 0);
+    ctx.lineTo(offset, canvas.height);
     ctx.stroke();
 }
 

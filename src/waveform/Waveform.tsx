@@ -10,7 +10,7 @@ interface WaveformProps {
   fileUrl: string;
   duration?: number | null;
   currentTime?: number | null;
-  onRangeChange?: (newRange: Range | null) => void;
+  onRangeChange?: (newRange: [number, number] | null) => void;
   onSeek?: (time: number) => void;
 }
 
@@ -31,12 +31,10 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeEdge, setResizeEdge] = useState<ResizeEdge | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
-  const { size } = useResizeObserver(containerRef.current);
+  const size = useResizeObserver(containerRef.current);
 
   duration = duration || 1;
 
-  const offsetToTime = (offset: number) => offset * duration;
-  const timeToOffset = (time: number) => time / duration;
   const hasMinWidth = (range: Range) => (range.end - range.start) * canvasRef.current!.width >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
@@ -61,9 +59,8 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
   useEffect(() => {
     if (audioBuffer) {
-      const container = containerRef.current!;
       const canvas = canvasRef.current!;
-      canvas.width = container.clientWidth;
+      canvas.width = size.width;
       drawWaveform(canvas, audioBuffer);
     }
   }, [audioBuffer, size]);
@@ -75,23 +72,22 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
   }, [range, size]);
 
   useEffect(() => {
-    if (currentTime !== null && currentTime !== undefined && size) {
+    if (size) {
       const currentTimeCanvas = currentTimeCanvasRef.current!;
-      const x = timeToOffset(currentTime);
       currentTimeCanvas.width = size.width;
-      drawCurrentTime(currentTimeCanvas, x);
+      drawCurrentTime(currentTimeCanvas, typeof currentTime === 'number' ? currentTime / duration : null);
     }
-  }, [currentTime, size, timeToOffset]);
+  }, [currentTime, duration, size]);
 
   useEffect(() => {
-    if (draftRange && (hasMinWidth(draftRange) || ignoreMinWidth)) {
+    if (size && draftRange && (hasMinWidth(draftRange) || ignoreMinWidth)) {
       const canvas = rangeCanvasRef.current!;
       drawRange(canvas, draftRange);
       setIgnoreMinWidth(true);
     }
-  }, [draftRange, ignoreMinWidth]);
+  }, [draftRange, ignoreMinWidth, size]);
 
-  const getOffset = (e: MouseEvent | TouchEvent) => {
+  const getOffsetRatio = (e: MouseEvent | TouchEvent) => {
     let clientX: number;
 
     if ('touches' in e) {
@@ -107,16 +103,16 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
     const { left, right } = canvasRef.current!.getBoundingClientRect();
 
-    return clientX < left ? 0 : (clientX > right ? right - left : clientX - left) / (right - left);
+    return clientX < left ? 0 : (clientX > right ? 1 : (clientX - left) / (right - left));
   }
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const offset = getOffset(e as any);
+    const offsetRatio = getOffsetRatio(e as any);
 
     setIgnoreMinWidth(false);
 
     // Check for resize handles first
-    const resizeEdge = range && getResizeEdge(range, offset);
+    const resizeEdge = range && getResizeEdge(range, offsetRatio);
 
     if (resizeEdge) {
       setResizeEdge(resizeEdge);
@@ -125,7 +121,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
     else {
       // If not resizing, start new range
       setResizeEdge('end');
-      setDraftRange({ start: offset, end: offset });
+      setDraftRange({ start: offsetRatio, end: offsetRatio });
       setRange(null);  // Clear existing range when starting new selection
     }
 
@@ -140,7 +136,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
       return;
     }
 
-    const offset = getOffset(e);
+    const offset = getOffsetRatio(e);
 
     let start = resizeEdge === 'start' ? offset : draftRange.start;
     let end = resizeEdge === 'end' ? offset : draftRange.end;
@@ -161,15 +157,16 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
     setResizeEdge(null);
     setDraftRange(null);
 
+    const {start, end} = draftRange;
+
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
-      const rangeInSeconds = { start: offsetToTime(draftRange.start), end: offsetToTime(draftRange.end) };
-      onRangeChange?.(rangeInSeconds);
+      onRangeChange?.([start * duration, end * duration]);
     }
     else {
       setRange(null);
       onRangeChange?.(null);
-      onSeek?.(offsetToTime(draftRange.start));
+      onSeek?.(start * duration);
     }
   }
 
@@ -190,13 +187,13 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
     return null;
   }
 
-  const updateCursor = (e: MouseEvent) => {
+  const updateCursor = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = rangeCanvasRef.current!;
 
-    const rect = canvas.getBoundingClientRect();
+    const {left, right} = canvas.getBoundingClientRect();
 
-    const offset = (e.clientX - rect.left) / (rect.right - rect.left);
-    const resizeEdge = range && getResizeEdge(range, offset);
+    const offsetRatio = (e.clientX - left) / (right - left);
+    const resizeEdge = range && getResizeEdge(range, offsetRatio);
 
     if (draftRange) {
       if (range) {
@@ -213,19 +210,19 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
   useEffect(() => {
     document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mousemove', updateCursor);
-
     document.addEventListener('touchmove', handleMove);
 
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove);
+    }
+  }, [handleMove]);
+
+  useEffect(() => {
     document.addEventListener('mouseup', handleEnd);
     document.addEventListener('touchend', handleEnd);
 
     return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mousemove', updateCursor);
-
-      document.removeEventListener('touchmove', handleMove);
-
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchend', handleEnd);
     }
@@ -256,6 +253,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
       <canvas ref={currentTimeCanvasRef} />
       <canvas
         ref={rangeCanvasRef}
+        onMouseMove={updateCursor}
         onMouseDown={handleStart}
         onTouchStart={handleStart}
       />

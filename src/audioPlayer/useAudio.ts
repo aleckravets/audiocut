@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { Range } from '../types/Range';
+import { useEffect, useState } from "react";
+import { useAudioCurrentTime } from "./useAudioCurrentTime";
 
 type AudioStatus = 'playing' | 'paused' | 'stopped';
 
@@ -9,9 +9,8 @@ export function useAudio(fileUrl: string) {
     const [duration, setDuration] = useState<number | null>(null);
     const [status, setStatus] = useState<AudioStatus | null>(null);
     const [volume, setVolume] = useState(1);
-    const [range, setRange] = useState<Range | null>(null);
-    const [currentTime, setCurrentTime] = useState<number | null>(null);
-    const animationFrameId = useRef<number | null>(null);
+    const [range, setRange] = useState<[number, number] | null>(null);
+    const currentTime = useAudioCurrentTime(audio);
 
     useEffect(() => {
         if (fileUrl) {
@@ -39,24 +38,7 @@ export function useAudio(fileUrl: string) {
         }
     }, [fileUrl]);
 
-    useEffect(() => {
-        const updateCurrentTime = () => {
-            if (audio) {
-                setCurrentTime(audio.currentTime);
-            }
-            animationFrameId.current = requestAnimationFrame(updateCurrentTime);
-        };
-
-        animationFrameId.current = requestAnimationFrame(updateCurrentTime);
-
-        return () => {
-            if (animationFrameId.current) {
-                cancelAnimationFrame(animationFrameId.current);
-            }
-        };
-    }, [audio]);
-
-    const togglePlay = () => {
+     const togglePlay = () => {
         if (audio) {
             if (status === 'paused' || status === 'stopped') {
                 setStatus('playing');
@@ -88,42 +70,49 @@ export function useAudio(fileUrl: string) {
         if (audio) {
             setStatus('stopped');
             audio.pause();
-            seek(range ? range.start : 0);
+            seek(range ? range[0] : 0);
         }
     }
 
-    const handleSetRange = (newRange: Range | null) => {
+    const handleSetRange = (newRange: [number, number] | null) => {
         setRange(newRange);
 
         if (newRange) {
-            if (newRange.start !== range?.start) {
-                seek(newRange.start);
+            if (newRange[0] !== range?.[0]) {
+                seek(newRange[0]);
             }
         }
-        else {
-            seek(0);
-        }
     }
 
-    const handleEnd = () => {
-        if (loop) {
-            seek(range ? range.start : 0);
-            audio?.play(); // needed in case of ended event
-        }
-        else {
-            stop();
-        }
-    }
+    // useEffect(() => {
+    //     if (audio && range && typeof currentTime === 'number' && currentTime >= range[1]) {
+    //         audio.currentTime = range[0];
+
+    //         // if (!loop) {
+    //         //     setStatus('stopped');
+    //         //     audio.pause();
+    //         // }
+    //     }
+    // }, [audio, range, currentTime, loop]);
 
     useEffect(() => {
-        if (range && currentTime && currentTime >= range.end) {
-            handleEnd();
-        }
-    }, [currentTime, range, handleEnd]);
+        if (audio) {
+            const handleEnd = () => {
+                audio.currentTime = range ? range[0] : 0;
 
-    useEffect(() => {
-        audio?.addEventListener('ended', handleEnd);
-    }, [audio, handleEnd]);
+                if (loop) {
+                    audio.play();
+                }
+                else {
+                    setStatus('stopped');
+                    audio.pause();
+                }
+            }
+
+            audio.addEventListener('ended', handleEnd);
+            return () => audio.removeEventListener('ended', handleEnd);
+        }
+    }, [audio, range, loop]);
 
     return {
         audio,

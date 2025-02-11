@@ -1,22 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 interface Size {
   width: number;
   height: number;
 }
 
-type ResizeCallback = (size: Size) => void;
-
 function useResizeObserver(element: HTMLElement | null) {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-  const callbackRefs = useRef<ResizeCallback[]>([]);
-
-  const subscribe = useCallback((callback: ResizeCallback) => {
-    callbackRefs.current.push(callback);
-    return () => {
-      callbackRefs.current = callbackRefs.current.filter(cb => cb !== callback);
-    };
-  }, []);
 
   useEffect(() => {
     if (element) {
@@ -24,7 +14,6 @@ function useResizeObserver(element: HTMLElement | null) {
         for (let entry of entries) {
           const { width, height } = entry.contentRect;
           setSize({ width, height });
-          callbackRefs.current.forEach(cb => cb({ width, height }));
         }
       });
 
@@ -34,7 +23,7 @@ function useResizeObserver(element: HTMLElement | null) {
     }
   }, [element]);
 
-  return { size, subscribe };
+  return size;
 }
 
 export default useResizeObserver;

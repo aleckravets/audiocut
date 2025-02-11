@@ -58,18 +58,18 @@ function App() {
         </label>
         {currentTime !== null && <p>Current time: {formatTime(currentTime)}</p>}
         <Volume volume={volume} onChange={setVolume} />
-        <button onClick={() => handleCut(range!.start, range!.end)} disabled={!range}>Cut</button>
+        <button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>Cut</button>
         {isEdited && <button onClick={handleDownload} className={style.downloadButton}>Download</button>}
       </div>
       <div className={style.trackContainer}>
         <Waveform
           fileUrl={fileUrl}
           duration={duration}
-          currentTime={status === 'stopped' ? null : currentTime}
+          currentTime={currentTime}
           onRangeChange={setRange}
-          onSeek={time => status === 'stopped' ? seek(0) : seek(time)}
+          onSeek={seek}
         />
-        <p>{range && formatTimeRange(range.start, range.end)}</p>
+        <p>{range && formatTimeRange(range[0], range[1])}</p>
         <p>{currentTime} / {duration}</p>
       </div>
     </div>
