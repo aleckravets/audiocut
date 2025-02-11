@@ -21,5 +21,12 @@ export const useAudioCurrentTime = (audio: HTMLAudioElement | null) => {
         };
     }, [audio]);
 
-    return currentTime;
+    const setter = (time: number) => {
+        if (audio) {
+            audio.currentTime = time;
+            setCurrentTime(time);
+        }
+    }
+
+    return [currentTime, setter] as const;
 };

@@ -10,7 +10,7 @@ export function useAudio(fileUrl: string) {
     const [status, setStatus] = useState<AudioStatus | null>(null);
     const [volume, setVolume] = useState(1);
     const [range, setRange] = useState<[number, number] | null>(null);
-    const currentTime = useAudioCurrentTime(audio);
+    const [currentTime, setCurrentTime] = useAudioCurrentTime(audio);
 
     useEffect(() => {
         if (fileUrl) {
@@ -38,7 +38,7 @@ export function useAudio(fileUrl: string) {
         }
     }, [fileUrl]);
 
-     const togglePlay = () => {
+    const togglePlay = () => {
         if (audio) {
             if (status === 'paused' || status === 'stopped') {
                 setStatus('playing');
@@ -47,12 +47,6 @@ export function useAudio(fileUrl: string) {
                 setStatus('paused');
                 audio.pause();
             }
-        }
-    };
-
-    const seek = (time: number) => {
-        if (audio) {
-            audio.currentTime = time;
         }
     };
 
@@ -70,7 +64,7 @@ export function useAudio(fileUrl: string) {
         if (audio) {
             setStatus('stopped');
             audio.pause();
-            seek(range ? range[0] : 0);
+            setCurrentTime(range ? range[0] : 0);
         }
     }
 
@@ -79,21 +73,21 @@ export function useAudio(fileUrl: string) {
 
         if (newRange) {
             if (newRange[0] !== range?.[0]) {
-                seek(newRange[0]);
+                setCurrentTime(newRange[0]);
             }
         }
     }
 
-    // useEffect(() => {
-    //     if (audio && range && typeof currentTime === 'number' && currentTime >= range[1]) {
-    //         audio.currentTime = range[0];
+    useEffect(() => {
+        if (audio && range && typeof currentTime === 'number' && currentTime >= range[1]) {
+            audio.currentTime = range[0];
 
-    //         // if (!loop) {
-    //         //     setStatus('stopped');
-    //         //     audio.pause();
-    //         // }
-    //     }
-    // }, [audio, range, currentTime, loop]);
+            if (!loop) {
+                setStatus('stopped');
+                audio.pause();
+            }
+        }
+    }, [audio, range, currentTime, loop]);
 
     useEffect(() => {
         if (audio) {
@@ -124,7 +118,7 @@ export function useAudio(fileUrl: string) {
         range,
         loop,
         togglePlay,
-        seek,
+        seek: setCurrentTime,
         toggleLoop,
         setVolume: setUserVolume,
         setRange: handleSetRange
