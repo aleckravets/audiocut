@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { useFfmpeg } from '../audioPlayer/useFfmpeg';
 import { useAudio } from '../audioPlayer/useAudio';
 import Waveform from '../waveform/Waveform';
-import style from './App.module.scss';
 import { Volume } from '../audioPlayer/Volume';
+import style from './App.module.scss';
 
 function App() {
   const [file, setFile] = useState<File>();
@@ -43,8 +43,15 @@ function App() {
   }
 
   return (
-    <div>
-      <FilePicker onSelect={setFile} />
+    <div className={style.container}>
+      <div className={style.header}>
+        <div>
+          <img src='./logo.svg' alt="AudioCut" />
+        </div>
+      </div>
+      <div className={style.toolbar}>
+        <FilePicker onSelect={setFile} />
+      </div>
       <div className={style.controls}>
         <button onClick={togglePlay}>{status === 'playing' ? 'Pause' : 'Play'}</button>
         <button onClick={stop}>Stop</button>

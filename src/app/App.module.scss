@@ -1,4 +1,21 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
 
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 4px 10px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .controls {
   display: flex;
