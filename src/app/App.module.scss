@@ -21,17 +21,22 @@
 }
 
 .toolbar {
-  margin-top: 10px;
   display: flex;
   justify-content: space-between;
+  padding: 10px 0;
 }
 
-.controls, 
+.controls {
+  flex-grow: 1;
+  display: flex;
+  gap: 10px;
+}
+
 .tools {
   flex-grow: 1;
   display: flex;
-  align-items: center;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .trackContainer {

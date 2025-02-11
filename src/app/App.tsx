@@ -5,6 +5,8 @@ import { useAudio } from '../audioPlayer/useAudio';
 import Waveform from '../waveform/Waveform';
 import { Volume } from '../audioPlayer/Volume';
 import style from './App.module.scss';
+import { Button } from "@/components/ui/button"
+import { Play, Pause, Square, Download, Scissors } from "lucide-react";
 
 const DEBUG = import.meta.env.DEV
 
@@ -62,8 +64,10 @@ function App() {
         </div>
         <div className={style.toolbar}>
           <div className={style.controls}>
-            <button onClick={togglePlay}>{status === 'playing' ? 'Pause' : 'Play'}</button>
-            <button onClick={stop}>Stop</button>
+            <Button onClick={togglePlay}>
+              {status === 'playing' ? <><Pause /> Pause</> : <><Play /> Play</>}
+            </Button>
+            <Button onClick={stop}><Square /> Stop</Button>
             <label>
               <input
                 type="checkbox"
@@ -76,8 +80,12 @@ function App() {
             {currentTime !== null && <p>{formatTime(currentTime)}</p>}
           </div>
           <div className={style.tools}>
-            <button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>Cut</button>
-            {<button onClick={handleDownload} className={style.downloadButton} disabled={!isEdited}>Download</button>}
+            <Button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>
+              <Scissors /> Cut
+            </Button>
+            <Button onClick={handleDownload} disabled={!isEdited}>
+              <Download /> Download
+            </Button>
           </div>
         </div>
         <div className={style.trackContainer}>
