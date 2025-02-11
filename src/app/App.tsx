@@ -6,6 +6,8 @@ import Waveform from '../waveform/Waveform';
 import { Volume } from '../audioPlayer/Volume';
 import style from './App.module.scss';
 
+const DEBUG = import.meta.env.DEV
+
 function App() {
   const [file, setFile] = useState<File>();
   const [fileUrl, setFileUrl] = useState<string>('./al-di-meola.mp3');
@@ -42,6 +44,11 @@ function App() {
     }
   }
 
+  const handleFileSelect = (file: File) => {
+    setIsEdited(false);
+    setFile(file);
+  }
+
   return (
     <div className={style.container}>
       <div className={style.header}>
@@ -49,35 +56,45 @@ function App() {
           <img src='./logo.svg' alt="AudioCut" />
         </div>
       </div>
-      <div className={style.toolbar}>
-        <FilePicker onSelect={setFile} />
-      </div>
-      <div className={style.controls}>
-        <button onClick={togglePlay}>{status === 'playing' ? 'Pause' : 'Play'}</button>
-        <button onClick={stop}>Stop</button>
-        <label>
-          <input
-            type="checkbox"
-            checked={loop}
-            onChange={toggleLoop}
+      <div className={style.content}>
+        <div className={style.filePicker}>
+          <FilePicker onSelect={handleFileSelect} />
+        </div>
+        <div className={style.toolbar}>
+          <div className={style.controls}>
+            <button onClick={togglePlay}>{status === 'playing' ? 'Pause' : 'Play'}</button>
+            <button onClick={stop}>Stop</button>
+            <label>
+              <input
+                type="checkbox"
+                checked={loop}
+                onChange={toggleLoop}
+              />
+              Loop
+            </label>
+            <Volume volume={volume} onChange={setVolume} />
+            {currentTime !== null && <p>{formatTime(currentTime)}</p>}
+          </div>
+          <div className={style.tools}>
+            <button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>Cut</button>
+            {<button onClick={handleDownload} className={style.downloadButton} disabled={!isEdited}>Download</button>}
+          </div>
+        </div>
+        <div className={style.trackContainer}>
+          <Waveform
+            fileUrl={fileUrl}
+            duration={duration}
+            currentTime={currentTime}
+            onRangeChange={setRange}
+            onSeek={seek}
           />
-          Loop
-        </label>
-        {currentTime !== null && <p>Current time: {formatTime(currentTime)}</p>}
-        <Volume volume={volume} onChange={setVolume} />
-        <button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>Cut</button>
-        {isEdited && <button onClick={handleDownload} className={style.downloadButton}>Download</button>}
-      </div>
-      <div className={style.trackContainer}>
-        <Waveform
-          fileUrl={fileUrl}
-          duration={duration}
-          currentTime={currentTime}
-          onRangeChange={setRange}
-          onSeek={seek}
-        />
-        <p>{range && formatTimeRange(range[0], range[1])}</p>
-        <p>{currentTime} / {duration}</p>
+          {DEBUG &&
+            <>
+              <p>{range && formatTimeRange(range[0], range[1])}</p>
+              <p>{currentTime} / {duration}</p>
+            </>
+          }
+        </div>
       </div>
     </div>
   )

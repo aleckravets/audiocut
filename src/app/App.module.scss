@@ -1,7 +1,6 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 30px;
 }
 
 .header {
@@ -11,14 +10,28 @@
   padding: 4px 10px;
 }
 
-.toolbar {
+.content {
+  padding: 0 20px;
+}
+
+.filePicker {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.controls {
+.toolbar {
+  margin-top: 10px;
   display: flex;
+  justify-content: space-between;
+}
+
+.controls, 
+.tools {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .trackContainer {
