@@ -60,7 +60,7 @@ function App() {
       </div>
       <div className={style.content}>
         <div className={style.filePicker}>
-          <FilePicker onSelect={handleFileSelect} />
+          <FilePicker onFileSelect={handleFileSelect} />
         </div>
         <div className={style.toolbar}>
           <div className={style.controls}>
