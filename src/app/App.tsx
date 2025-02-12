@@ -83,7 +83,7 @@ function App() {
             <Button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>
               <Scissors /> Cut
             </Button>
-            <Button onClick={handleDownload} disabled={!isEdited}>
+            <Button onClick={handleDownload}>
               <Download /> Download
             </Button>
           </div>

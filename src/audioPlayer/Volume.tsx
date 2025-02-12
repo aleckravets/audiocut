@@ -1,7 +1,6 @@
-import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css';
-import style from './Volume.module.scss';
+import { Slider } from "@/components/ui/slider";
 import { useState } from 'react';
+import style from './Volume.module.scss';
 
 interface VolumeProps {
     volume?: number;
@@ -32,12 +31,11 @@ export function Volume({ volume, onChange }: VolumeProps) {
             <label>
                 Volume:
                 <Slider
-                    min={0}
-                    max={1}
-                    value={volume}
+                    value={[volume ?? 1]}
+                    max={1} 
                     step={0.01}
-                    onChange={value => onChange?.(value as number)}
-                    onChangeComplete={value => handleVolumeChangeComplete(value as number)}
+                    onValueChange={value => onChange?.(value[0])}
+                    onValueCommit={value => handleVolumeChangeComplete(value[0])}
                     className={style.volumeSlider}
                 />
             </label>
