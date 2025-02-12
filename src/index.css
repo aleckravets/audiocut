@@ -23,7 +23,7 @@ body {
   margin: 0;
   display: flex;
   justify-items: center;
-  min-width: 320px;
+  min-width: 340px;
   min-height: 100vh;
   /* background: yellow; */
 }
