@@ -89,15 +89,15 @@ function App() {
             <Button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>
               <Scissors /> Cut
             </Button>
-            <Button onClick={handleDownload}>
+            <Button onClick={handleDownload} disabled={!isEdited}>
               <Download /> Download
             </Button>
           </div>
         </div>
         {DEBUG &&
           <div className={style.debug}>
-            <p>{range && formatTimeRange(range[0], range[1])}</p>
-            <p>{currentTime} / {duration}</p>
+            <div><label>Current time: </label>{currentTime} / {duration}</div>
+            {range && <div><label>Selected range: </label>{formatTimeRange(range[0], range[1])}</div>}
           </div>
         }
       </div>
