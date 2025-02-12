@@ -6,7 +6,7 @@ import Waveform from '../waveform/Waveform';
 import { Volume } from '../audioPlayer/Volume';
 import style from './App.module.scss';
 import { Button } from "@/components/ui/button"
-import { Play, Pause, Square, Download, Scissors } from "lucide-react";
+import { Play, Pause, Square, Download, Scissors, Repeat } from "lucide-react";
 
 const DEBUG = import.meta.env.DEV
 
@@ -64,28 +64,12 @@ function App() {
         </div>
         <div className={style.toolbar}>
           <div className={style.controls}>
-            <Button onClick={togglePlay}>
-              {status === 'playing' ? <><Pause /> Pause</> : <><Play /> Play</>}
+            <Button onClick={togglePlay} title={status === 'playing' ? 'Pause' : 'Play'}>
+              {status === 'playing' ? <><Pause /><span>Pause</span></> : <><Play /><span>Play</span></>}
             </Button>
-            <Button onClick={stop}><Square /> Stop</Button>
-            <label>
-              <input
-                type="checkbox"
-                checked={loop}
-                onChange={toggleLoop}
-              />
-              Loop
-            </label>
+            <Button onClick={stop} title='Stop'><Square /><span>Stop</span></Button>
+            <Button onClick={toggleLoop} variant={loop ? 'default' : 'secondary'} title='Repeat'><Repeat /></Button>
             <Volume volume={volume} onChange={setVolume} />
-            {currentTime !== null && <p>{formatTime(currentTime)}</p>}
-          </div>
-          <div className={style.tools}>
-            <Button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>
-              <Scissors /> Cut
-            </Button>
-            <Button onClick={handleDownload}>
-              <Download /> Download
-            </Button>
           </div>
         </div>
         <div className={style.trackContainer}>
@@ -96,13 +80,26 @@ function App() {
             onRangeChange={setRange}
             onSeek={seek}
           />
-          {DEBUG &&
-            <>
-              <p>{range && formatTimeRange(range[0], range[1])}</p>
-              <p>{currentTime} / {duration}</p>
-            </>
-          }
         </div>
+        <div className={style.footer}>
+          <div className={style.currentTime}>
+            {formatTime(currentTime ?? 0)}
+          </div>
+          <div className={style.tools}>
+            <Button onClick={() => range && handleCut(range[0], range[1])} disabled={!range}>
+              <Scissors /> Cut
+            </Button>
+            <Button onClick={handleDownload}>
+              <Download /> Download
+            </Button>
+          </div>
+        </div>
+        {DEBUG &&
+          <div className={style.debug}>
+            <p>{range && formatTimeRange(range[0], range[1])}</p>
+            <p>{currentTime} / {duration}</p>
+          </div>
+        }
       </div>
     </div>
   )

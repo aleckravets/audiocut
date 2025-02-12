@@ -23,13 +23,28 @@
 .toolbar {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 10px 0;
+
+  button span {
+    display: none;
+  }
 }
 
 .controls {
   flex-grow: 1;
   display: flex;
   gap: 10px;
+}
+
+.currentTime {
+  font-size: 20px;
+  color: #555;
+}
+
+.footer {
+  margin-top: 10px;
+  display: flex;
 }
 
 .tools {
@@ -41,7 +56,6 @@
 
 .trackContainer {
   position: relative;
-  height: 100px;
 }
 
 .downloadButton {
