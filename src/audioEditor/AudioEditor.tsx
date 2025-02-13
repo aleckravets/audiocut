@@ -8,8 +8,6 @@ import { useEffect, useState } from "react";
 import style from './AudioEditor.module.scss';
 import { formatTime, formatTimeRange } from "@/utils/timeUtils";
 
-const DEBUG = import.meta.env.DEV
-
 interface AudioEditorProps {
   file: File;
 }

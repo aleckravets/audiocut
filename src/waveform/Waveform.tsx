@@ -42,7 +42,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek, onSta
         try {
           clearCanvas(canvasRef.current!);
           setLoading(true);
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
           const response = await fetch(fileUrl);
           const arrayBuffer = await response.arrayBuffer();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -117,7 +117,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek, onSta
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (loading) return;
-    
+
     const offsetRatio = getOffsetRatio(e as any);
 
     setIgnoreMinWidth(false);
