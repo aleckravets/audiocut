@@ -10,6 +10,7 @@ export function useFfmpeg() {
   useEffect(() => {
     const load = async () => {
       const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.9/dist/esm";
+      // ffmpeg.on("log", console.log);
 
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
@@ -25,9 +26,10 @@ export function useFfmpeg() {
         ),
       });
 
-      setLoading(loaded);};
+      setLoading(loaded);
+    };
 
-      load();
+    load();
   }, []);
 
   const cut = async (fileUrl: string, start: number, end: number) => {

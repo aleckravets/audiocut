@@ -37,8 +37,12 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
 
   const handleCut = async (start: number, end: number) => {
-    const file = await ffmpeg.cut(fileUrl!, start, end);
-    setCurrentFile(file);
+    try {
+      const file = await ffmpeg.cut(fileUrl!, start, end);
+      setCurrentFile(file);
+    } catch (error) {
+      console.log("Failed to cut audio: ", error);
+    }
   }
 
   const handleDownload = () => {
