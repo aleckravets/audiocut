@@ -31,8 +31,6 @@ body {
   width: 100vw;
   max-width: 1280px;
   margin: 0 auto;
-  /* padding: 2rem; */
-  border: 1px dashed #000;
 }
 
 :root {
