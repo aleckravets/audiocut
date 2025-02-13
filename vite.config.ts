@@ -16,7 +16,6 @@ export default defineConfig({
       },
     },
   },
-  base: "audiocut",
   plugins: [react(), tailwindcss()],
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
