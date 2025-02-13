@@ -1,14 +1,39 @@
 .container {
-    position: relative;
-    height: 150px;
-    width: 100%;
-    background-color: rgb(95, 107, 155);
-    
-    canvas {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 150px;
-    }
+  position: relative;
+  height: 150px;
+  width: 100%;
+  background-color: rgb(95, 107, 155);
+}
+
+canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 150px;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  animation: flicker 1.5s infinite;
+  font-size: 20px;
+  color: #eee;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }

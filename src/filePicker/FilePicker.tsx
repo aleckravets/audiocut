@@ -27,7 +27,7 @@ const FilePickerButton: React.FC<FilePickerButtonProps> = ({ onFileSelect }) => 
 
   return (
     <div className="flex flex-col items-center space-y-2">
-      <Button onClick={handleClick} className="w-full flex items-center gap-2">
+      <Button onClick={handleClick} className="w-30 flex items-center gap-2">
         <Upload size={18} /> Select File
       </Button>
       <input

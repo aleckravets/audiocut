@@ -3,15 +3,17 @@ import style from './Waveform.module.scss';
 import { drawWaveform } from './drawWaveform';
 import { drawRange } from './drawRange';
 import { Range } from "../types/Range";
-import useResizeObserver from '../useResizeObserver';
+import useResizeObserver from '../utils/useResizeObserver';
 import drawCurrentTime from './drawCurrentTime';
+import { clearCanvas } from './clearCanvas';
 
 interface WaveformProps {
-  fileUrl: string;
+  fileUrl: string | null;
   duration?: number | null;
   currentTime?: number | null;
   onRangeChange?: (newRange: [number, number] | null) => void;
   onSeek?: (time: number) => void;
+  onStateChanged?: (loading: boolean) => void;
 }
 
 const MIN_RANGE_WIDTH = 1; // in pixels
@@ -20,55 +22,61 @@ type ResizeEdge = 'start' | 'end';
 const RESIZE_EDGE_WIDTH = 10; // in pixels
 
 // todo split into two components waveform and range
-const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: WaveformProps) => {
+const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek, onStateChanged }: WaveformProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rangeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentTimeCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
 
   const [range, setRange] = useState<Range | null>(null);
   const [draftRange, setDraftRange] = useState<Range | null>(null);
   const [resizeEdge, setResizeEdge] = useState<ResizeEdge | null>(null);
   const [ignoreMinWidth, setIgnoreMinWidth] = useState(false);
   const size = useResizeObserver(containerRef.current);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer>();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (fileUrl) {
+      const loadAudio = async () => {
+        try {
+          clearCanvas(canvasRef.current!);
+          setLoading(true);
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const response = await fetch(fileUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          setAudioBuffer(audioBuffer);
+        } catch (error) {
+          console.error('Error loading audio:', error);
+        }
+      };
+
+      loadAudio();
+    }
+  }, [fileUrl]);
 
   duration = duration || 1;
 
   const hasMinWidth = (range: Range) => (range.end - range.start) * canvasRef.current!.width >= MIN_RANGE_WIDTH;
 
   useEffect(() => {
-    const loadAudio = async () => {
-      if (!fileUrl) return;
-
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const response = await fetch(fileUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        setAudioBuffer(audioBuffer);
-        setRange(null);
-        setDraftRange(null);
-      } catch (error) {
-        console.error('Error loading audio:', error);
-      }
-    };
-
-    loadAudio();
-  }, [fileUrl]);
+    onStateChanged?.(loading);
+  }, [loading]);
 
   useEffect(() => {
     if (audioBuffer) {
       const canvas = canvasRef.current!;
       canvas.width = size.width;
       drawWaveform(canvas, audioBuffer);
+      setLoading(false);
     }
   }, [audioBuffer, size]);
 
   useEffect(() => {
-      const rangeCanvas = rangeCanvasRef.current!;
-      rangeCanvas.width = size.width;
-      drawRange(rangeCanvas, range);
+    const rangeCanvas = rangeCanvasRef.current!;
+    rangeCanvas.width = size.width;
+    drawRange(rangeCanvas, range);
   }, [range, size]);
 
   useEffect(() => {
@@ -157,7 +165,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
     setResizeEdge(null);
     setDraftRange(null);
 
-    const {start, end} = draftRange;
+    const { start, end } = draftRange;
 
     if (hasMinWidth(draftRange)) {
       setRange(draftRange);
@@ -183,14 +191,14 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
         return 'end';
       }
     }
-  
+
     return null;
   }
 
   const updateCursor = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = rangeCanvasRef.current!;
 
-    const {left, right} = canvas.getBoundingClientRect();
+    const { left, right } = canvas.getBoundingClientRect();
 
     const offsetRatio = (e.clientX - left) / (right - left);
     const resizeEdge = range && getResizeEdge(range, offsetRatio);
@@ -249,6 +257,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek }: Wav
 
   return (
     <div ref={containerRef} className={style.container}>
+      {loading && <div className={style.loading}>Loading...</div>}
       <canvas ref={canvasRef} />
       <canvas ref={currentTimeCanvasRef} />
       <canvas
