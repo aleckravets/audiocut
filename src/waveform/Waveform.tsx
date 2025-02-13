@@ -70,6 +70,7 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek, onSta
       canvas.width = size.width;
       drawWaveform(canvas, audioBuffer);
       setLoading(false);
+      setRange(null);
     }
   }, [audioBuffer, size]);
 
@@ -115,6 +116,8 @@ const Waveform = ({ fileUrl, duration, currentTime, onRangeChange, onSeek, onSta
   }
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (loading) return;
+    
     const offsetRatio = getOffsetRatio(e as any);
 
     setIgnoreMinWidth(false);

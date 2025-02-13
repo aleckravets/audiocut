@@ -1,4 +1,4 @@
-import { Play, Pause, Square, Download, Scissors, Repeat } from "lucide-react";
+import { Play, Pause, Square, Download, Scissors, Repeat, Loader2 } from "lucide-react";
 import { useFfmpeg } from './useFfmpeg';
 import { useAudio } from './useAudio';
 import Waveform from '../waveform/Waveform';
@@ -39,12 +39,8 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
 
   const handleCut = async (start: number, end: number) => {
-    // todo make loaded a promise
-    if (ffmpeg.loaded) {
-      const file = await ffmpeg.cut(fileUrl!, start, end);
-      setCurrentFile(file);
-      setRange(null);
-    }
+    const file = await ffmpeg.cut(fileUrl!, start, end);
+    setCurrentFile(file);
   }
 
   const handleDownload = () => {
@@ -88,10 +84,10 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
         }
         <div className={style.tools}>
           <div className={style.currentTime}>{range && formatTimeRange(range[0], range[1])}</div>
-          <Button onClick={() => range && handleCut(range[0], range[1])} disabled={disabled || !range}>
-            <Scissors /> Cut
+          <Button onClick={() => range && handleCut(range[0], range[1])} disabled={disabled || ffmpeg.working || !range}>
+            {ffmpeg.working ? <Loader2 className="animate-spin" /> : <Scissors />} Cut
           </Button>
-          <Button onClick={handleDownload} disabled={disabled || !isEdited}>
+          <Button onClick={handleDownload} disabled={disabled || ffmpeg.working || !isEdited}>
             <Download /> Download
           </Button>
         </div>

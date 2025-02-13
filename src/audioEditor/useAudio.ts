@@ -27,6 +27,7 @@ export function useAudio(fileUrl: string | null) {
 
       setAudio(audio);
       setStatus('stopped');
+      setRange(null);
 
       return () => {
         // audio should be paused to let it be garbage-collected
