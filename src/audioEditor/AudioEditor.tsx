@@ -43,20 +43,13 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
   const handleDownload = () => {
     if (fileUrl) {
-      const tg = (window as any).Telegram?.WebApp;
-      
-      if (tg) {
-        tg.downloadFile({url: fileUrl, file_name: currentFile!.name});
-      }
-      else {
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = currentFile!.name;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = currentFile!.name;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 
