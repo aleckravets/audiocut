@@ -91,6 +91,7 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
           <Button onClick={handleDownload} disabled={disabled || ffmpeg.working || !isEdited}>
             <Download /> Download
           </Button>
+          {fileUrl && isEdited && <a href={fileUrl} className="button" download={currentFile!.name} target="_blank" >Download</a>}
         </div>
       </div>
     </div>
