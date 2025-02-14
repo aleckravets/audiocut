@@ -2,12 +2,11 @@ import FilePicker from '../filePicker/FilePicker'
 import { useEffect, useState } from 'react';
 import style from './App.module.scss';
 import AudioEditor from '../audioEditor/AudioEditor';
+import { tg } from './tg';
 
 function App() {
   const [file, setFile] = useState<File>();
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-
     if (tg) {
       tg.expand();
       tg.ready();

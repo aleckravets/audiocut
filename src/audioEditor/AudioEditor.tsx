@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react";
 import style from './AudioEditor.module.scss';
 import { formatTime } from "@/utils/timeUtils";
+import { tg } from "@/app/tg";
 
 interface AudioEditorProps {
   file: File;
@@ -43,13 +44,18 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
   const handleDownload = () => {
     if (fileUrl) {
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = currentFile!.name;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (tg) {
+        tg.downloadFile({url: fileUrl, file_name: currentFile!.name});
+      }
+      else {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = currentFile!.name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   }
 
@@ -91,7 +97,6 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
           <Button onClick={handleDownload} disabled={disabled || ffmpeg.working || !isEdited}>
             <Download /> Download
           </Button>
-          {fileUrl && isEdited && <a href={fileUrl} className="button" download={currentFile!.name} target="_blank" >Download</a>}
         </div>
       </div>
     </div>
