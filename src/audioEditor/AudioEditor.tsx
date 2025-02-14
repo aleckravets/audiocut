@@ -46,6 +46,7 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = currentFile!.name;
+      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
