@@ -25,6 +25,7 @@ body {
   justify-items: center;
   min-width: 340px;
   min-height: 100vh;
+  max-height: 100vh;
 }
 
 #root {
