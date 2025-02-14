@@ -5,8 +5,12 @@ import AudioEditor from '../audioEditor/AudioEditor';
 
 function App() {
   const [file, setFile] = useState<File>();
+  const [error, setError] = useState<ErrorEvent | PromiseRejectionEvent>();
 
   useEffect(() => {
+    window.addEventListener("error", setError);
+    window.addEventListener("unhandledrejection", setError);
+
     const tg = (window as any).Telegram?.WebApp;
 
     if (tg) {
@@ -27,6 +31,13 @@ function App() {
           <FilePicker onFileSelect={setFile} />
         </div>
         {file && <AudioEditor file={file} />}
+      </div>
+      <div className="error">
+        {error && (
+          <pre>
+            {JSON.stringify(error, undefined, 2)}
+          </pre>
+        )}
       </div>
     </div>
   )
