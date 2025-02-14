@@ -6,12 +6,7 @@ import ConsoleLogger from '@/utils/ConsoleLogger';
 
 function App() {
   const [file, setFile] = useState<File>();
-  const [error, setError] = useState<ErrorEvent | PromiseRejectionEvent>();
-
   useEffect(() => {
-    window.addEventListener("error", setError);
-    window.addEventListener("unhandledrejection", setError);
-
     const tg = (window as any).Telegram?.WebApp;
 
     if (tg) {
