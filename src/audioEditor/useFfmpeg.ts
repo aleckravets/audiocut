@@ -1,5 +1,5 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { toBlobURL, fetchFile } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
 import { useEffect, useState } from "react";
 
 export function useFfmpeg() {
@@ -9,22 +9,16 @@ export function useFfmpeg() {
 
   useEffect(() => {
     const load = async () => {
-      const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.9/dist/esm";
+      const baseURL = window.location.origin + "/ffmpeg"; //"https://unpkg.com/@ffmpeg/core-mt@0.12.9/dist/esm";
       ffmpeg.on("log", ({type, message}) => console.log(type, message));
       // ffmpeg.on("progress", ({time, progress}) => console.log('[progress]', type, message));
 
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
       const loaded = ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.wasm`,
-          "application/wasm"
-        ),
-        workerURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.worker.js`,
-          "text/javascript"
-        ),
+        coreURL: `${baseURL}/ffmpeg-core.js`,
+        wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+        workerURL: `${baseURL}/ffmpeg-core.worker.js`,
       });
 
       setLoading(loaded);
