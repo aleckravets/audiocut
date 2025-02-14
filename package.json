@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@ffmpeg/core-mt": "0.12.9",
     "@tailwindcss/vite": "^4.0.6",
     "@types/node": "^22.13.1",
     "@types/react": "^18.3.18",
