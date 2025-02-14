@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react";
 import style from './AudioEditor.module.scss';
 import { formatTime } from "@/utils/timeUtils";
-import { tg } from "@/app/tg";
 
 interface AudioEditorProps {
   file: File;
@@ -44,6 +43,8 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
   const handleDownload = () => {
     if (fileUrl) {
+      const tg = (window as any).Telegram?.WebApp;
+      
       if (tg) {
         tg.downloadFile({url: fileUrl, file_name: currentFile!.name});
       }
