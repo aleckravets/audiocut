@@ -2,7 +2,6 @@ import FilePicker from '../filePicker/FilePicker'
 import { useEffect, useState } from 'react';
 import style from './App.module.scss';
 import AudioEditor from '../audioEditor/AudioEditor';
-import ConsoleLogger from '@/utils/ConsoleLogger';
 
 function App() {
   const [file, setFile] = useState<File>();
@@ -28,7 +27,6 @@ function App() {
         </div>
         {file && <AudioEditor file={file} />}
       </div>
-      <ConsoleLogger/>
     </div>
   )
 }

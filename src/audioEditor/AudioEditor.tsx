@@ -1,12 +1,12 @@
 import { Play, Pause, Square, Download, Scissors, Repeat, Loader2 } from "lucide-react";
-import { useFfmpeg } from './useFfmpeg';
+import { Status, useFfmpeg } from './useFfmpeg';
 import { useAudio } from './useAudio';
 import Waveform from '../waveform/Waveform';
 import { Volume } from './Volume';
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react";
 import style from './AudioEditor.module.scss';
-import { formatTime, formatTimeRange } from "@/utils/timeUtils";
+import { formatTime } from "@/utils/timeUtils";
 
 interface AudioEditorProps {
   file: File;
@@ -54,6 +54,8 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
 
   const disabled = !audio || loading;
 
+  const ffmpegBusy = ffmpeg.status === Status.LOADING || ffmpeg.working;
+
   return (
     <div>
       <div className={style.toolbar}>
@@ -81,8 +83,8 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
           </div>
         }
         <div className={style.tools}>
-          <div className={style.currentTime}>{range && formatTimeRange(range[0], range[1])}</div>
-          <Button onClick={() => range && handleCut(range[0], range[1])} disabled={disabled || ffmpeg.working || !range}>
+          {/* <div className={style.currentTime}>{range && formatTimeRange(range[0], range[1])}</div> */}
+          <Button onClick={() => range && handleCut(range[0], range[1])} disabled={disabled || ffmpegBusy || !range}>
             {ffmpeg.working ? <Loader2 className="animate-spin" /> : <Scissors />} Cut
           </Button>
           <Button onClick={handleDownload} disabled={disabled || ffmpeg.working || !isEdited}>
