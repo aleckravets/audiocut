@@ -4,6 +4,17 @@
   height: 100%;
 }
 
+.filePickerContainer {
+  display: flex;
+  align-items: top;
+  justify-content: center;
+  gap: 20px;
+
+  & > span {
+    margin: auto 0;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

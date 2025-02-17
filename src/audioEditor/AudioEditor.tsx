@@ -9,42 +9,43 @@ import style from './AudioEditor.module.scss';
 import { formatTime } from "@/utils/timeUtils";
 
 interface AudioEditorProps {
-  file: File;
+  fileUrl: string;
 }
 
-const AudioEditor = ({ file }: AudioEditorProps) => {
-  const [currentFile, setCurrentFile] = useState(file);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const { audio, currentTime, volume, status, duration, setVolume, togglePlay, stop, seek, range, setRange, toggleLoop, loop } = useAudio(fileUrl);
+const AudioEditor = ({ fileUrl }: AudioEditorProps) => {
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [currentFileUrl, setCurrentFileUrl] = useState<string | null>(null);
+  const { audio, currentTime, volume, status, duration, setVolume, togglePlay, stop, seek, range, setRange, toggleLoop, loop } = useAudio(currentFileUrl);
   const [loading, setLoading] = useState(true);
   const ffmpeg = useFfmpeg();
 
-  const isEdited = file !== currentFile;
+  const isEdited = !!currentFile !== null;
 
   useEffect(() => {
-    if (file) {
-      setCurrentFile(file);
+    if (fileUrl) {
+      setCurrentFileUrl(fileUrl);
+      setCurrentFile(null)
     }
-  }, [file]);
+  }, [fileUrl]);
 
   useEffect(() => {
     if (currentFile) {
       const url = URL.createObjectURL(currentFile);
-      setFileUrl(url);
+      setCurrentFileUrl(url);
       return () => URL.revokeObjectURL(url);
     }
   }, [currentFile]);
 
 
   const handleCut = async (start: number, end: number) => {
-    const file = await ffmpeg.cut(fileUrl!, start, end);
+    const file = await ffmpeg.cut(currentFileUrl!, start, end);
     setCurrentFile(file);
   }
 
   const handleDownload = () => {
-    if (fileUrl) {
+    if (currentFileUrl) {
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = currentFileUrl;
       link.download = currentFile!.name;
       link.target = '_blank';
       document.body.appendChild(link);
@@ -70,7 +71,7 @@ const AudioEditor = ({ file }: AudioEditorProps) => {
         </div>
       </div>
       <Waveform
-        fileUrl={fileUrl}
+        fileUrl={currentFileUrl}
         onStateChanged={setLoading}
         duration={duration}
         currentTime={currentTime}

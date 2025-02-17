@@ -37,7 +37,6 @@ const FilePickerButton: React.FC<FilePickerButtonProps> = ({ onFileSelect }) => 
         accept="audio/*"
         className="hidden"
       />
-      <span className="text-sm text-gray-500">{fileName}</span>
     </div>
   );
 };

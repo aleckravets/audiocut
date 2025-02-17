@@ -51,7 +51,7 @@ export function useFfmpeg() {
       )
       : "";
 
-    ffmpeg.terminate();
+    // ffmpeg.terminate();
 
     await ffmpeg.load({
       coreURL,
