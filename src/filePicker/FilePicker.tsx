@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
@@ -8,7 +8,6 @@ interface FilePickerButtonProps {
 
 const FilePickerButton: React.FC<FilePickerButtonProps> = ({ onFileSelect }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileName, setFileName] = useState<string>("No file chosen");
 
   const handleClick = () => {
     if (fileInputRef.current) {
@@ -20,7 +19,6 @@ const FilePickerButton: React.FC<FilePickerButtonProps> = ({ onFileSelect }) => 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFileName(file.name);
       onFileSelect?.(file);
     }
   };
